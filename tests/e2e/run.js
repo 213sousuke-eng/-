@@ -64,8 +64,10 @@ async function scenario(browser, deviceName, tag) {
   await noHScroll(page, "結果");
   await page.screenshot({ path: path.join(OUT, tag + "-result.png"), fullPage: true });
 
-  // 2. 一次方程式: 不正な入力
+  // 2. 一次方程式: 不正な入力（ホームに解答数が出ていること）
   await page.click('[data-testid="home"]');
+  const unitText = await page.textContent('[data-testid="unit-factorize"]');
+  assert(/10問/.test(unitText), "ホームに解答数が出ない: " + unitText);
   await page.click('[data-testid="unit-lineq"]');
   await page.fill('[data-testid="input-0"]', "abc");
   await page.click('[data-testid="submit"]');

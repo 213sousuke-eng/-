@@ -26,3 +26,8 @@ test("renderMath: 割り算記号や普通の式はそのまま", () => {
 test("renderMath: HTML をエスケープし改行を br に", () => {
   assert.equal(renderMath("<b>&\n1"), "&lt;b&gt;&amp;<br>1");
 });
+
+test("renderMath: 1/(単項式) は単項式全体を分母にする", () => {
+  assert.equal(renderMath("8a²b² × 1/(4ab)"), "8a²b² × " + F("1", "4ab"));
+  assert.equal(renderMath("1/(-2b)"), F("1", "-2b"));
+});

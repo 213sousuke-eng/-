@@ -17,6 +17,7 @@
   function renderMath(text) {
     let s = escapeHtml(text);
     s = s.replace(/\(([^()]+)\)\/(\d+|√\d+)/g, (_, n, d) => frac(n, d));
+    s = s.replace(/(\d+)\/\(([^()]+)\)/g, (_, n, d) => frac(n, d));
     s = s.replace(/(\d*√\d+|\d+|[a-z])\/(√\d+|\d+|[a-z])/g, (_, n, d) => frac(n, d));
     return s.replace(/\n/g, "<br>");
   }
@@ -145,7 +146,7 @@
                 },
                 [
                   h("span", { class: "unit-name" }, u.name),
-                  h("span", { class: "unit-rate " + rateClass(st) }, rateText(st)),
+                  h("span", { class: "unit-rate " + rateClass(st) }, st.count ? rateText(st) + "・" + st.count + "問" : rateText(st)),
                 ]
               );
             })

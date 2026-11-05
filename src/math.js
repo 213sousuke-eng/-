@@ -252,7 +252,7 @@
     return d;
   }
 
-  const SUP = { 2: "²", 3: "³", 4: "⁴" };
+  const SUP = { 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹" };
   function monoStr(vars) {
     return Object.keys(vars)
       .sort()

@@ -551,7 +551,7 @@
       if (!cc.abs().eq(1)) wrong.push(result.scale(new Frac(1).div(cc.mul(cc))));
       meta = { num: [n, c], den: [d], result };
       steps = [
-        "わり算は逆数のかけ算にする: " + formatPoly(n) + " × 1/" + monoParen(d) + " × " + monoParen(c),
+        "わり算は逆数のかけ算にする: " + formatPoly(n) + " × 1/(" + formatPoly(d) + ") × " + monoParen(c),
         "係数どうし、文字どうしで計算する: " + formatPoly(result),
       ];
     }
@@ -691,9 +691,11 @@
         ];
       } else {
         prompt = "切片が " + b.toString() + " で、点 " + pt(px, py) + " を通る直線の式を求めなさい。";
+        const aTerm = px.eq(1) ? "a" : px.eq(-1) ? "-a" : paren(px) + "a";
+        const bTerm = b.isZero() ? "" : b.isNeg() ? " - " + b.abs().toString() : " + " + b.toString();
         steps = [
-          "y = ax " + (b.isNeg() ? "- " + b.abs().toString() : "+ " + b.toString()) + " に " + pt(px, py) + " を代入",
-          py.toString() + " = " + paren(px) + "a + " + paren(b) + " より a = " + a.toString(),
+          "y = ax" + bTerm + " に " + pt(px, py) + " を代入",
+          py.toString() + " = " + aTerm + bTerm + " より a = " + a.toString(),
           lineStr(a, b),
         ];
       }
@@ -822,9 +824,10 @@
                 .map((pt) => {
                   let pr = Poly.const(1);
                   for (const f of pt.factors) pr = pr.mul(f);
-                  return (pt.k < 0 ? "-(" : "(") + formatPoly(pr) + ")";
+                  return { neg: pt.k < 0, s: "(" + formatPoly(pr) + ")" };
                 })
-                .join(" "),
+                .map((o, i) => (i === 0 ? (o.neg ? "-" : "") + o.s : (o.neg ? " - " : " + ") + o.s))
+                .join(""),
             "かっこをはずして同類項をまとめる: " + formatPoly(result),
           ];
     return choiceProblem(
@@ -987,6 +990,12 @@
   function rootStr(k, n) {
     return (k === 1 ? "" : k === -1 ? "-" : String(k)) + "√" + n;
   }
+  // 続けて書く根号の項: " + 2√3" / " - √3"（0 なら空）
+  function surdTerm(s) {
+    if (s.isZero()) return "";
+    const t = s.toString();
+    return t[0] === "-" ? " - " + t.slice(1) : " + " + t;
+  }
   function genSqrt(rng, level) {
     let value, prompt, num, wrongs = [], steps;
     const sqf = [2, 3, 5, 6, 7];
@@ -1092,7 +1101,7 @@
       wrongs.push(Surd.rat(a + p * q).add(Surd.sqrt(a).mul(p * q)).toString());
       steps = [
         "(x + a)(x + b) = x² + (a + b)x + ab を使う",
-        a + (p + q >= 0 ? " + " + (p + q) : " - " + -(p + q)) + "√" + a + (p * q > 0 ? " + " + p * q : " - " + -(p * q)) + " = " + value.toString(),
+        a + surdTerm(Surd.sqrt(a).mul(p + q)) + (p * q > 0 ? " + " + p * q : " - " + -(p * q)) + " = " + value.toString(),
       ];
     } else {
       // √a × √b ÷ √c
