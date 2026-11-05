@@ -293,6 +293,33 @@
     return ts.map((t, i) => coefMono(t.coef, t.vars, i === 0)).join("");
   }
 
+  // 因数の積の表示。同じ因数はまとめて²、単項式の因数はかっこなしで先頭に置く
+  function formatFactors(factors, coef) {
+    const k = Frac.of(coef === undefined ? 1 : coef);
+    const groups = [];
+    for (const f of factors) {
+      const g = groups.find((gr) => gr.p.eq(f));
+      if (g) g.n++;
+      else groups.push({ p: f, n: 1 });
+    }
+    const monos = groups.filter((g) => g.p.terms.size === 1);
+    const polys = groups.filter((g) => g.p.terms.size > 1);
+    let monoProd = Poly.const(k);
+    for (const g of monos) monoProd = monoProd.mul(g.p.pow(g.n));
+    let head;
+    const ms = formatPoly(monoProd);
+    if (polys.length === 0) return ms;
+    if (ms === "1") head = "";
+    else if (ms === "-1") head = "-";
+    else head = ms;
+    return (
+      head +
+      polys
+        .map((g) => "(" + formatPoly(g.p) + ")" + (g.n === 1 ? "" : SUP[g.n] || "^" + g.n))
+        .join("")
+    );
+  }
+
   // ---------- 根号 ----------
   function simplifySqrt(n) {
     if (!Number.isInteger(n) || n < 0) throw new Error("simplifySqrt: 不正な値 " + n);
@@ -395,6 +422,7 @@
     simplifySqrt,
     Poly,
     formatPoly,
+    formatFactors,
     mulberry32,
     randInt,
     randNonZero,

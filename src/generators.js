@@ -729,6 +729,540 @@
     );
   }
 
+  // ========== 中3 ==========
+  const { formatFactors } = M;
+
+  // ---- 式の展開 ----
+  function genExpand(rng, level) {
+    const X = Poly.var("x"),
+      Yv = Poly.var("y");
+    const r = (m) => randNonZero(rng, -m, m);
+    let parts, prompt, wrong = [];
+    const show = (fs) => fs.map((f) => "(" + formatPoly(f) + ")").join("");
+    const showSq = (f) => "(" + formatPoly(f) + ")²";
+    if (level === 1) {
+      const t = pick(rng, ["ab", "sq", "sqm", "pm"]);
+      const a = Math.abs(r(9)),
+        b = r(9);
+      let fs;
+      if (t === "ab") {
+        const b2 = r(9);
+        need(b !== b2, "同じ");
+        fs = [X.add(Poly.const(b)), X.add(Poly.const(b2))];
+        prompt = show(fs);
+        wrong.push(X.pow(2).add(Poly.const(b * b2)));
+        wrong.push(X.pow(2).add(X.scale(b * b2)).add(Poly.const(b + b2)));
+      } else if (t === "sq" || t === "sqm") {
+        const v = t === "sq" ? a : -a;
+        fs = [X.add(Poly.const(v)), X.add(Poly.const(v))];
+        prompt = showSq(fs[0]);
+        wrong.push(X.pow(2).add(Poly.const(v * v)));
+        wrong.push(X.pow(2).add(X.scale(v)).add(Poly.const(v * v)));
+        wrong.push(X.pow(2).add(X.scale(2 * v)).add(Poly.const(2 * v)));
+      } else {
+        fs = [X.add(Poly.const(a)), X.sub(Poly.const(a))];
+        prompt = show(fs);
+        wrong.push(X.pow(2).add(Poly.const(a * a)));
+        wrong.push(X.pow(2).sub(X.scale(2 * a)).sub(Poly.const(a * a)));
+      }
+      parts = [{ k: 1, factors: fs }];
+    } else {
+      const t = pick(rng, ["sq2", "pm2", "combo"]);
+      if (t === "sq2") {
+        const p = Math.abs(r(4)),
+          q = r(5);
+        need(p !== 1 || Math.abs(q) !== 1, "簡単すぎ");
+        const f = X.scale(p).add(Yv.scale(q));
+        parts = [{ k: 1, factors: [f, f] }];
+        prompt = showSq(f);
+        wrong.push(X.scale(p).pow(2).add(Yv.scale(q).pow(2)));
+        wrong.push(X.scale(p).pow(2).add(X.mul(Yv).scale(p * q)).add(Yv.scale(q).pow(2)));
+        wrong.push(X.scale(p * p).mul(X).add(X.mul(Yv).scale(2 * p * q)).add(Yv.mul(Yv).scale(q)));
+      } else if (t === "pm2") {
+        const p = Math.abs(r(5)),
+          q = Math.abs(r(9));
+        need(p !== 1, "簡単すぎ");
+        const fs = [X.scale(p).add(Poly.const(q)), X.scale(p).sub(Poly.const(q))];
+        parts = [{ k: 1, factors: fs }];
+        prompt = show(fs);
+        wrong.push(X.pow(2).scale(p).sub(Poly.const(q * q)));
+        wrong.push(X.pow(2).scale(p * p).add(Poly.const(q * q)));
+        wrong.push(X.pow(2).scale(p * p).sub(Poly.const(q)));
+      } else {
+        // (x + a)(x + b) - (x + c)²  または  (x + a)(x - a) + (x + c)(x + d) など
+        const a = r(6),
+          b = r(6),
+          cc = r(6);
+        const f1 = [X.add(Poly.const(a)), X.add(Poly.const(b))];
+        const f2 = [X.add(Poly.const(cc)), X.add(Poly.const(cc))];
+        const sg = pick(rng, [1, -1]);
+        parts = [{ k: 1, factors: f1 }, { k: sg, factors: f2 }];
+        prompt = show(f1) + (sg > 0 ? " + " : " - ") + showSq(f2[0]);
+        const p1 = f1[0].mul(f1[1]),
+          p2 = f2[0].mul(f2[1]);
+        // 後ろのかっこの符号を一部しか変えない誤り
+        if (sg < 0) wrong.push(p1.sub(X.pow(2)).add(X.scale(2 * cc)).add(Poly.const(cc * cc)));
+        wrong.push(p1.add(p2.scale(-sg)));
+        wrong.push(p1.add(X.pow(2).add(Poly.const(cc * cc)).scale(sg)));
+      }
+    }
+    let result = Poly.const(0);
+    for (const pt of parts) {
+      let pr = Poly.const(pt.k);
+      for (const f of pt.factors) pr = pr.mul(f);
+      result = result.add(pr);
+    }
+    need(!result.isZero(), "0");
+    const steps =
+      parts.length === 1
+        ? ["乗法公式を使って展開する", "= " + formatPoly(result)]
+        : [
+            "それぞれ展開する: " +
+              parts
+                .map((pt) => {
+                  let pr = Poly.const(1);
+                  for (const f of pt.factors) pr = pr.mul(f);
+                  return (pt.k < 0 ? "-(" : "(") + formatPoly(pr) + ")";
+                })
+                .join(" "),
+            "かっこをはずして同類項をまとめる: " + formatPoly(result),
+          ];
+    return choiceProblem(
+      rng,
+      { unitId: "expand", level, prompt: "次の式を展開しなさい。\n" + prompt, steps, meta: { parts } },
+      formatPoly(result),
+      wrong.filter((w) => !w.isZero() && !w.eq(result)).map(formatPoly),
+      () => formatPoly(result.add(X.scale(randNonZero(rng, -2, 2))))
+    );
+  }
+
+  // ---- 因数分解 ----
+  function genFactorize(rng, level) {
+    const X = Poly.var("x"),
+      Yv = Poly.var("y");
+    const C = (n) => Poly.const(n);
+    const r = (m) => randNonZero(rng, -m, m);
+    let factors, coef = 1, cands = [], hint;
+    const t = level === 1 ? pick(rng, ["tri", "tri", "diffsq", "square", "common"]) : pick(rng, ["ktri", "ax2", "two", "kdiff"]);
+    if (t === "tri") {
+      const p = r(9),
+        q = r(9);
+      need(p + q !== 0, "差の平方は別");
+      factors = [X.add(C(p)), X.add(C(q))];
+      hint = "たして " + (p + q) + "、かけて " + p * q + " になる2数は " + p + " と " + q;
+      cands.push({ factors: [X.sub(C(p)), X.sub(C(q))] });
+      cands.push({ factors: [X.add(C(-p)), X.add(C(q))] });
+      cands.push({ factors: [X.add(C(p)), X.add(C(-q))] });
+      cands.push({ factors: [X.add(C(1)), X.add(C(p * q))] });
+      cands.push({ factors: [X.add(C(-1)), X.add(C(-p * q))] });
+    } else if (t === "diffsq") {
+      const a = randInt(rng, 1, 3),
+        b = randInt(rng, 1, 9);
+      need(M.gcd(a, b) === 1, "共通因数なし");
+      const P = X.scale(a);
+      factors = [P.add(C(b)), P.sub(C(b))];
+      hint = "a² - b² = (a + b)(a - b) を使う";
+      cands.push({ factors: [P.sub(C(b)), P.sub(C(b))] });
+      cands.push({ factors: [P.add(C(b)), P.add(C(b))] });
+      cands.push({ factors: [X.add(C(b)), X.sub(C(b))] });
+      cands.push({ factors: [P.add(C(b * b)), P.sub(C(1))] });
+    } else if (t === "square") {
+      const a = r(9);
+      factors = [X.add(C(a)), X.add(C(a))];
+      hint = "a² ± 2ab + b² = (a ± b)² を使う";
+      cands.push({ factors: [X.sub(C(a)), X.sub(C(a))] });
+      cands.push({ factors: [X.add(C(a)), X.sub(C(a))] });
+      cands.push({ factors: [X.add(C(2 * a)), X.add(C(2 * a))] });
+      cands.push({ factors: [X.add(C(1)), X.add(C(a * a))] });
+    } else if (t === "common") {
+      const k = randInt(rng, 2, 6),
+        a = r(9);
+      factors = [X, X.add(C(a))];
+      coef = k;
+      hint = "共通因数 " + formatPoly(X.scale(k)) + " をくくり出す";
+      cands.push({ factors: [X.sub(C(a))], coef: k, mono: true });
+      cands.push({ factors: [X, X.add(C(a * k))], coef: 1 });
+      cands.push({ factors: [X, X.add(C(a))], coef: 1 });
+      cands.push({ factors: [X, X.sub(C(a))], coef: k });
+    } else if (t === "ktri") {
+      const k = randInt(rng, 2, 4) * pick(rng, [1, 1, -1]);
+      const p = r(6),
+        q = r(6);
+      need(p + q !== 0 && p !== q, "形");
+      factors = [X.add(C(p)), X.add(C(q))];
+      coef = k;
+      hint = "共通因数 " + k + " をくくり出してから、たして " + (p + q) + "、かけて " + p * q + " になる2数を探す";
+      cands.push({ factors: [X.add(C(p)), X.add(C(q))], coef: 1 });
+      cands.push({ factors: [X.sub(C(p)), X.sub(C(q))], coef: k });
+      cands.push({ factors: [X.add(C(-p)), X.add(C(q))], coef: k });
+      cands.push({ factors: [X.add(C(p)), X.add(C(q))], coef: -k });
+    } else if (t === "ax2") {
+      const a = randInt(rng, 2, 3);
+      const p = r(7),
+        q = r(5);
+      need(M.gcd(a, Math.abs(p)) === 1, "共通因数なし");
+      factors = [X.scale(a).add(C(p)), X.add(C(q))];
+      hint = "(" + a + "x + □)(x + △) の形で、□ と △ の組を探す";
+      cands.push({ factors: [X.scale(a).add(C(q)), X.add(C(p))] });
+      cands.push({ factors: [X.scale(a).sub(C(p)), X.sub(C(q))] });
+      cands.push({ factors: [X.scale(a).add(C(p)), X.sub(C(q))] });
+      cands.push({ factors: [X.scale(a).sub(C(p)), X.add(C(q))] });
+    } else if (t === "two") {
+      // 2変数: (ax + by)(ax - by) または (ax + by)²
+      const a = randInt(rng, 1, 3),
+        b = randInt(rng, 1, 5);
+      need(M.gcd(a, b) === 1 && !(a === 1 && b === 1), "形");
+      const P = X.scale(a),
+        Q = Yv.scale(b * pick(rng, [1, -1]));
+      if (rng() < 0.5) {
+        factors = [P.add(Q), P.sub(Q)];
+        hint = "a² - b² = (a + b)(a - b) を使う";
+        cands.push({ factors: [P.add(Q), P.add(Q)] });
+        cands.push({ factors: [P.sub(Q), P.sub(Q)] });
+        cands.push({ factors: [X.add(Yv.scale(b)), X.sub(Yv.scale(b))], coef: 1 });
+      } else {
+        factors = [P.add(Q), P.add(Q)];
+        hint = "a² ± 2ab + b² = (a ± b)² を使う";
+        cands.push({ factors: [P.sub(Q), P.sub(Q)] });
+        cands.push({ factors: [P.add(Q), P.sub(Q)] });
+        cands.push({ factors: [P.add(Q.scale(2)), P.add(Q.scale(2))] });
+      }
+    } else {
+      // k(x + a)(x - a)
+      const k = randInt(rng, 2, 5),
+        a = randInt(rng, 1, 6);
+      factors = [X.add(C(a)), X.sub(C(a))];
+      coef = k;
+      hint = "共通因数 " + k + " をくくり出してから a² - b² = (a + b)(a - b) を使う";
+      cands.push({ factors: [X.sub(C(a)), X.sub(C(a))], coef: k });
+      cands.push({ factors: [X.add(C(a * k)), X.sub(C(a))], coef: 1 });
+      cands.push({ factors: [X.add(C(a)), X.sub(C(a))], coef: 1 });
+      cands.push({ factors: [X.add(C(2 * a)), X.sub(C(2 * a))], coef: k });
+    }
+    const product = (fs, k) => fs.reduce((acc, f) => acc.mul(f), Poly.const(k === undefined ? 1 : k));
+    const original = product(factors, coef);
+    const correct = formatFactors(factors, coef);
+    const choiceFactors = {};
+    choiceFactors[correct] = { factors, coef };
+    const wrongStrs = [];
+    for (const c of cands) {
+      const cc = c.coef === undefined ? coef : c.coef;
+      const fs = c.mono ? [X].concat(c.factors) : c.factors;
+      if (product(fs, cc).eq(original)) continue;
+      const s = formatFactors(fs, cc);
+      if (choiceFactors[s]) continue;
+      choiceFactors[s] = { factors: fs, coef: cc };
+      wrongStrs.push(s);
+    }
+    const fallback = () => {
+      const i = randInt(rng, 0, factors.length - 1);
+      const fs = factors.slice();
+      fs[i] = fs[i].add(C(randNonZero(rng, -3, 3)));
+      if (product(fs, coef).eq(original)) throw new Error("同じ");
+      const s = formatFactors(fs, coef);
+      choiceFactors[s] = { factors: fs, coef };
+      return s;
+    };
+    const steps = [hint, formatPoly(original) + " = " + correct];
+    const p = choiceProblem(
+      rng,
+      {
+        unitId: "factorize",
+        level,
+        prompt: "次の式を因数分解しなさい。\n" + formatPoly(original),
+        steps,
+        meta: { factors, coef, original, choiceFactors },
+      },
+      correct,
+      wrongStrs,
+      fallback
+    );
+    // 使わなかった候補は消しておく
+    for (const k of Object.keys(choiceFactors)) if (!p.choices.includes(k)) delete choiceFactors[k];
+    return p;
+  }
+
+  // ---- 平方根 ----
+  // k√n の表示（簡約前）
+  function rootStr(k, n) {
+    return (k === 1 ? "" : k === -1 ? "-" : String(k)) + "√" + n;
+  }
+  function genSqrt(rng, level) {
+    let value, prompt, num, wrongs = [], steps;
+    const sqf = [2, 3, 5, 6, 7];
+    const t = level === 1 ? pick(rng, ["simplify", "addsub", "mul"]) : pick(rng, ["rational", "square", "product", "muldiv"]);
+    if (t === "simplify") {
+      const r = pick(rng, sqf),
+        k = randInt(rng, 2, 7);
+      const n = k * k * r;
+      value = Surd.sqrt(n);
+      num = Math.sqrt(n);
+      prompt = "√" + n + " を a√b の形に変形しなさい。";
+      wrongs = [rootStr(k + 1, r), rootStr(k - 1, r).replace(/^1√/, "√"), rootStr(k * k, r), rootStr(r, k), rootStr(k, r * 2)];
+      steps = [n + " = " + k + "² × " + r, "√" + n + " = " + value.toString()];
+    } else if (t === "addsub") {
+      const r = pick(rng, [2, 3, 5]);
+      const n = randInt(rng, 2, 3);
+      let sum = new Surd(),
+        js = 0,
+        str = "",
+        naive = 0;
+      let shown = "";
+      const used = new Set();
+      for (let i = 0; i < n; i++) {
+        const k = randInt(rng, 1, 5);
+        need(!used.has(k), "同じ根号");
+        used.add(k);
+        const sg = i === 0 ? 1 : pick(rng, [1, -1]);
+        const m = k * k * r;
+        sum = sum.add(Surd.sqrt(m).mul(sg));
+        js += sg * Math.sqrt(m);
+        naive += sg * m;
+        str += (i === 0 ? "" : sg > 0 ? " + " : " - ") + "√" + m;
+        shown += (i === 0 ? "" : sg > 0 ? " + " : " - ") + rootStr(k, r);
+      }
+      need(!sum.isZero(), "0");
+      value = sum;
+      num = js;
+      prompt = "次の計算をしなさい。\n" + str;
+      if (naive > 0) wrongs.push(Surd.sqrt(naive).toString() === value.toString() ? "√" + (naive + 1) : "√" + naive);
+      const coef = value.terms.get(r);
+      if (coef) {
+        wrongs.push(Surd.sqrt(r).mul(coef.add(1)).toString());
+        wrongs.push(Surd.sqrt(r).mul(coef.sub(1)).toString());
+        wrongs.push(Surd.sqrt(r * 2).mul(coef).toString());
+      }
+      steps = ["それぞれ a√b の形にする: " + shown, "√" + r + " の係数をまとめる: " + value.toString()];
+    } else if (t === "mul") {
+      const a = pick(rng, [2, 3, 5, 6, 7, 10]),
+        b = pick(rng, [2, 3, 6, 8, 12, 15, 18]);
+      need(a !== b, "同じ");
+      value = Surd.sqrt(a).mul(Surd.sqrt(b));
+      num = Math.sqrt(a) * Math.sqrt(b);
+      prompt = "次の計算をしなさい。\n√" + a + " × √" + b;
+      wrongs = ["√" + (a + b), (a * b) + "", Surd.sqrt(a * b).mul(2).toString(), "√" + a * b === value.toString() ? "2√" + a * b : "√" + a * b];
+      steps = ["√a × √b = √(ab) より √" + a * b, "簡単にする: " + value.toString()];
+    } else if (t === "rational") {
+      // k/√r + √m など
+      const r = pick(rng, [2, 3, 5, 6]);
+      const k = r * randInt(rng, 1, 4);
+      const m2 = randInt(rng, 1, 4);
+      const sg = pick(rng, [1, -1]);
+      const m = m2 * m2 * r;
+      value = Surd.sqrt(r).mul(new Frac(k, r)).add(Surd.sqrt(m).mul(sg));
+      num = k / Math.sqrt(r) + sg * Math.sqrt(m);
+      need(!value.isZero(), "0");
+      prompt = "次の計算をしなさい。\n" + k + "/√" + r + (sg > 0 ? " + " : " - ") + "√" + m;
+      const co = value.terms.get(r) || new Frac(0);
+      wrongs.push(Surd.sqrt(r).mul(new Frac(k)).add(Surd.sqrt(m).mul(sg)).toString());
+      wrongs.push(Surd.sqrt(r).mul(co.add(1)).toString());
+      wrongs.push(Surd.sqrt(r).mul(co.neg()).toString());
+      wrongs.push(Surd.rat(new Frac(k, r)).add(Surd.sqrt(m).mul(sg)).toString());
+      steps = ["分母を有理化する: " + k + "/√" + r + " = " + k + "√" + r + "/" + r + " = " + Surd.sqrt(r).mul(new Frac(k, r)).toString()];
+      if (m2 > 1) steps.push("√" + m + " = " + Surd.sqrt(m).toString());
+      steps.push("まとめる: " + value.toString());
+    } else if (t === "square") {
+      const a = pick(rng, [2, 3, 5, 6, 7]),
+        b = randNonZero(rng, -4, 4);
+      const base = Surd.sqrt(a).add(b);
+      value = base.mul(base);
+      num = Math.pow(Math.sqrt(a) + b, 2);
+      prompt = "次の計算をしなさい。\n(√" + a + (b > 0 ? " + " : " - ") + Math.abs(b) + ")²";
+      wrongs.push(Surd.rat(a + b * b).toString());
+      wrongs.push(Surd.rat(a + b * b).add(Surd.sqrt(a).mul(b)).toString());
+      wrongs.push(Surd.rat(a + b * b).sub(Surd.sqrt(a).mul(2 * b)).toString());
+      wrongs.push(Surd.rat(a + 2 * b).add(Surd.sqrt(a).mul(2 * b)).toString());
+      steps = [
+        "(a + b)² = a² + 2ab + b² を使う",
+        "(√" + a + ")² + 2 × √" + a + " × " + paren(b) + " + " + paren(b) + "² = " + value.toString(),
+      ];
+    } else if (t === "product") {
+      // (√a + p)(√a + q)
+      const a = pick(rng, [2, 3, 5, 6, 7]),
+        p = randNonZero(rng, -5, 5),
+        q = randNonZero(rng, -5, 5);
+      need(p !== q, "同じ");
+      value = Surd.sqrt(a).add(p).mul(Surd.sqrt(a).add(q));
+      num = (Math.sqrt(a) + p) * (Math.sqrt(a) + q);
+      const term = (v) => (v > 0 ? " + " + v : " - " + -v);
+      prompt = "次の計算をしなさい。\n(√" + a + term(p) + ")(√" + a + term(q) + ")";
+      wrongs.push(Surd.rat(a + p * q).toString());
+      wrongs.push(Surd.rat(a + p * q).sub(Surd.sqrt(a).mul(p + q)).toString());
+      wrongs.push(Surd.rat(a - p * q).add(Surd.sqrt(a).mul(p + q)).toString());
+      wrongs.push(Surd.rat(a + p * q).add(Surd.sqrt(a).mul(p * q)).toString());
+      steps = [
+        "(x + a)(x + b) = x² + (a + b)x + ab を使う",
+        a + (p + q >= 0 ? " + " + (p + q) : " - " + -(p + q)) + "√" + a + (p * q > 0 ? " + " + p * q : " - " + -(p * q)) + " = " + value.toString(),
+      ];
+    } else {
+      // √a × √b ÷ √c
+      const a = pick(rng, [2, 3, 6, 10, 15]),
+        b = pick(rng, [2, 3, 5, 6, 8, 12]),
+        c = pick(rng, [2, 3, 5, 6]);
+      need((a * b) % c === 0, "割り切れる");
+      value = Surd.sqrt((a * b) / c);
+      num = (Math.sqrt(a) * Math.sqrt(b)) / Math.sqrt(c);
+      prompt = "次の計算をしなさい。\n√" + a + " × √" + b + " ÷ √" + c;
+      wrongs.push(Surd.sqrt(a * b * c).toString());
+      wrongs.push(value.mul(2).toString());
+      wrongs.push(Surd.sqrt(a + b - c > 0 ? a + b - c : a + b).toString());
+      wrongs.push("√" + (a * b) / c === value.toString() ? value.add(1).toString() : "√" + (a * b) / c);
+      steps = ["√(" + a + " × " + b + " ÷ " + c + ") = √" + (a * b) / c, "簡単にする: " + value.toString()];
+    }
+    const correct = value.toString();
+    // 値が正解と同じになる誤答（表記違い）は除く
+    const evalStr = (s) => {
+      const js = s.replace(/(\d*)√(\d+)/g, (_, k, r) => "(" + (k || "1") + "*Math.sqrt(" + r + "))");
+      try {
+        return Function('"use strict";return (' + js + ")")();
+      } catch (e) {
+        return NaN;
+      }
+    };
+    // √(平方数) のような表記の誤答は出さない
+    const perfectRoot = (s) => (s.match(/√(\d+)/g) || []).some((t) => M.simplifySqrt(+t.slice(1)).r === 1);
+    const ok = (s) => typeof s === "string" && !perfectRoot(s) && Math.abs(evalStr(s) - num) > 1e-9 && isFinite(evalStr(s));
+    return choiceProblem(
+      rng,
+      { unitId: "sqrt", level, prompt, steps, meta: { value, exprNumber: num } },
+      correct,
+      wrongs.filter(ok),
+      () => {
+        const s = value.add(Surd.sqrt(pick(rng, [2, 3, 5])).mul(randNonZero(rng, -2, 2))).toString();
+        if (!ok(s)) throw new Error("同値");
+        return s;
+      }
+    );
+  }
+
+  // ---- 二次方程式 ----
+  // 解の表示
+  function rootsRational(rs) {
+    const u = [];
+    for (const r of rs) if (!u.some((v) => v.eq(r))) u.push(r);
+    u.sort((a, b) => a.toNumber() - b.toNumber());
+    if (u.length === 2 && u[0].eq(u[1].neg())) return "x = ±" + u[1].toString();
+    return "x = " + u.map((r) => r.toString()).join(", ");
+  }
+  // (p ± q√r)/d  （p, q, d は整数、q>0, d>0, r は平方因数なし >1）
+  function rootsIrrational(p, q, r, d) {
+    const g = M.gcd(M.gcd(Math.abs(p), q), d);
+    p /= g;
+    q /= g;
+    d /= g;
+    const qs = (q === 1 ? "" : String(q)) + "√" + r;
+    if (d === 1) return p === 0 ? "x = ±" + qs : "x = " + p + " ± " + qs;
+    return p === 0 ? "x = ±" + qs + "/" + d : "x = (" + p + " ± " + qs + ")/" + d;
+  }
+  function genQuadeq(rng, level) {
+    const X = Poly.var("x");
+    let poly, prompt, answer, wrongs = [], steps;
+    const t = level === 1 ? pick(rng, ["fact", "fact", "zero", "sq"]) : pick(rng, ["formula", "formula", "shift", "ax2"]);
+    if (t === "fact" || t === "zero" || t === "sq" || t === "ax2") {
+      let p, q, a = 1;
+      if (t === "fact") {
+        p = randInt(rng, -9, 9);
+        q = randInt(rng, -9, 9);
+        need(p !== 0 && q !== 0 && p !== -q, "形");
+      } else if (t === "zero") {
+        p = 0;
+        q = randNonZero(rng, -9, 9);
+      } else if (t === "sq") {
+        p = randInt(rng, 1, 9);
+        q = -p;
+      } else {
+        a = randInt(rng, 2, 3);
+        p = randNonZero(rng, -7, 7);
+        q = randNonZero(rng, -5, 5);
+        need(M.gcd(a, Math.abs(p)) === 1, "既約");
+      }
+      // a(x)... : (a x - p)(x - q) = 0  → 解 p/a, q
+      poly = X.scale(a).sub(Poly.const(p)).mul(X.sub(Poly.const(q)));
+      const r1 = new Frac(p, a),
+        r2 = new Frac(q);
+      answer = rootsRational([r1, r2]);
+      prompt = formatPoly(poly) + " = 0";
+      wrongs.push(rootsRational([r1.neg(), r2.neg()]));
+      wrongs.push(rootsRational([r1, r2.neg()]));
+      wrongs.push(rootsRational([r1.neg(), r2]));
+      if (a !== 1) wrongs.push(rootsRational([new Frac(p), r2]));
+      if (t === "zero") wrongs.push(rootsRational([r2]));
+      if (t === "sq") wrongs.push(rootsRational([new Frac(p)]));
+      steps = ["左辺を因数分解する: " + formatFactors([X.scale(a).sub(Poly.const(p)), X.sub(Poly.const(q))]) + " = 0", answer];
+    } else if (t === "shift") {
+      // (x + a)² = b
+      const a = randNonZero(rng, -6, 6),
+        b = pick(rng, [2, 3, 5, 6, 7, 8, 12, 18, 20]);
+      poly = X.add(Poly.const(a)).pow(2).sub(Poly.const(b));
+      const { k, r } = M.simplifySqrt(b);
+      answer = rootsIrrational(-a, k, r, 1);
+      prompt = "(" + formatPoly(X.add(Poly.const(a))) + ")² = " + b;
+      wrongs.push(rootsIrrational(a, k, r, 1));
+      wrongs.push(rootsIrrational(-a, b, 1, 1) === answer ? rootsIrrational(-a, k + 1, r, 1) : "x = " + -a + " ± " + b);
+      if (b > 1) wrongs.push("x = " + -a + " ± √" + b === answer ? rootsIrrational(-a, k, r, 2) : "x = " + (-a) + " ± √" + b);
+      wrongs.push(rootsIrrational(-a, k, r, 2));
+      steps = ["x " + (a > 0 ? "+ " + a : "- " + -a) + " = ±√" + b, answer];
+    } else {
+      // 解の公式
+      const A = randInt(rng, 1, 3),
+        B = randInt(rng, -7, 7),
+        Cc = randNonZero(rng, -7, 7);
+      const D = B * B - 4 * A * Cc;
+      need(D > 0, "実数解");
+      const { k, r } = M.simplifySqrt(D);
+      need(r !== 1, "無理数解");
+      poly = X.pow(2).scale(A).add(X.scale(B)).add(Poly.const(Cc));
+      answer = rootsIrrational(-B, k, r, 2 * A);
+      prompt = formatPoly(poly) + " = 0";
+      wrongs.push(rootsIrrational(B, k, r, 2 * A));
+      wrongs.push(rootsIrrational(-B, k, r, A));
+      wrongs.push(rootsIrrational(-B, k, r, 1));
+      const D2 = B * B + 4 * A * Cc;
+      if (D2 > 0) {
+        const s2 = M.simplifySqrt(D2);
+        if (s2.r !== 1) wrongs.push(rootsIrrational(-B, s2.k, s2.r, 2 * A));
+      }
+      steps = [
+        "解の公式 x = (-b ± √(b² - 4ac))/2a に a = " + A + "、b = " + B + "、c = " + Cc + " を代入",
+        "x = (" + -B + " ± √" + D + ")/" + 2 * A,
+        "簡単にする: " + answer,
+      ];
+    }
+    // 答えと解の集合が同じ誤答を除く
+    const toNums = (s) => {
+      const out = [];
+      for (const part of s.slice(4).split(", ")) {
+        const ev = (e) => Function('"use strict";return (' + e.replace(/(\d*)√(\d+)/g, (_, kk, rr) => "(" + (kk || "1") + "*Math.sqrt(" + rr + "))") + ")")();
+        if (part.includes("±")) {
+          out.push(ev(part.startsWith("±") ? part.slice(1) : part.replace("±", "+")));
+          out.push(ev(part.startsWith("±") ? "-" + part.slice(1) : part.replace("±", "-")));
+        } else out.push(ev(part));
+      }
+      return out.sort((a, b) => a - b);
+    };
+    const ans = toNums(answer);
+    const differs = (s) => {
+      let w;
+      try {
+        w = toNums(s);
+      } catch (e) {
+        return false;
+      }
+      return w.length !== ans.length || w.some((v, i) => !isFinite(v) || Math.abs(v - ans[i]) > 1e-9);
+    };
+    return choiceProblem(
+      rng,
+      { unitId: "quadeq", level, prompt: "次の方程式を解きなさい。\n" + prompt, steps, meta: { poly } },
+      answer,
+      wrongs.filter(differs),
+      () => {
+        const s = rootsRational([new Frac(randNonZero(rng, -9, 9)), new Frac(randNonZero(rng, -9, 9))]);
+        if (!differs(s)) throw new Error("同じ");
+        return s;
+      }
+    );
+  }
+
   const GENERATORS = {
     signed: genSigned,
     linexpr: genLinexpr,
@@ -737,6 +1271,10 @@
     polycalc: genPolycalc,
     simul: genSimul,
     linfunc: genLinfunc,
+    expand: genExpand,
+    factorize: genFactorize,
+    sqrt: genSqrt,
+    quadeq: genQuadeq,
   };
 
   // ---------- 予備問題（生成に失敗し続けた場合のみ使用） ----------
@@ -821,7 +1359,7 @@
       2: fb("factorize", 2, "次の式を因数分解しなさい。\n2x² - 8", "choice", "2(x + 2)(x - 2)", [
         "共通因数 2 をくくる: 2(x² - 4)",
         "x² - 4 = (x + 2)(x - 2)",
-      ], { choices: ["2(x + 2)(x - 2)", "(2x + 4)(x - 2)", "2(x - 2)²", "2(x² - 4)"] }),
+      ], { choices: ["2(x + 2)(x - 2)", "(2x + 2)(x - 4)", "2(x - 2)²", "2(x + 4)(x - 4)"] }),
     },
     sqrt: {
       1: fb("sqrt", 1, "次の計算をしなさい。\n√12 + √27", "choice", "5√3", ["√12 = 2√3、√27 = 3√3", "2√3 + 3√3 = 5√3"], {
