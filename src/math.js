@@ -293,7 +293,106 @@
     return ts.map((t, i) => coefMono(t.coef, t.vars, i === 0)).join("");
   }
 
+  // ---------- 根号 ----------
+  function simplifySqrt(n) {
+    if (!Number.isInteger(n) || n < 0) throw new Error("simplifySqrt: 不正な値 " + n);
+    if (n === 0) return { k: 0, r: 1 };
+    let k = 1,
+      r = n;
+    for (let f = 2; f * f <= r; f++) {
+      while (r % (f * f) === 0) {
+        r /= f * f;
+        k *= f;
+      }
+    }
+    return { k, r };
+  }
+
+  // k√r の和。terms: Map<r, Frac>（r=1 は有理数部分）
+  class Surd {
+    constructor(terms) {
+      this.terms = terms || new Map();
+    }
+    static rat(q) {
+      const s = new Surd();
+      const f = Frac.of(q);
+      if (!f.isZero()) s.terms.set(1, f);
+      return s;
+    }
+    static sqrt(n) {
+      const { k, r } = simplifySqrt(n);
+      const s = new Surd();
+      if (k !== 0) s.terms.set(r, new Frac(k));
+      return s;
+    }
+    _put(r, c) {
+      const cur = this.terms.get(r);
+      const v = cur ? cur.add(c) : c;
+      if (v.isZero()) this.terms.delete(r);
+      else this.terms.set(r, v);
+    }
+    add(o) {
+      o = toSurd(o);
+      const s = new Surd(new Map(this.terms));
+      for (const [r, c] of o.terms) s._put(r, c);
+      return s;
+    }
+    sub(o) {
+      return this.add(toSurd(o).mul(-1));
+    }
+    mul(o) {
+      o = toSurd(o);
+      const s = new Surd();
+      for (const [r1, c1] of this.terms) {
+        for (const [r2, c2] of o.terms) {
+          const { k, r } = simplifySqrt(r1 * r2);
+          s._put(r, c1.mul(c2).mul(k));
+        }
+      }
+      return s;
+    }
+    eq(o) {
+      return this.sub(o).isZero();
+    }
+    isZero() {
+      return this.terms.size === 0;
+    }
+    isRational() {
+      for (const r of this.terms.keys()) if (r !== 1) return false;
+      return true;
+    }
+    toNumber() {
+      let v = 0;
+      for (const [r, c] of this.terms) v += c.toNumber() * Math.sqrt(r);
+      return v;
+    }
+    toString() {
+      const rs = Array.from(this.terms.keys()).sort((a, b) => a - b);
+      if (rs.length === 0) return "0";
+      return rs
+        .map((r, i) => {
+          const c = this.terms.get(r);
+          const neg = c.isNeg();
+          const ac = c.abs();
+          let body;
+          if (r === 1) body = ac.toString();
+          else {
+            const num = (ac.n === 1 ? "" : String(ac.n)) + "√" + r;
+            body = ac.d === 1 ? num : num + "/" + ac.d;
+          }
+          if (i === 0) return (neg ? "-" : "") + body;
+          return (neg ? " - " : " + ") + body;
+        })
+        .join("");
+    }
+  }
+  function toSurd(o) {
+    return o instanceof Surd ? o : Surd.rat(o);
+  }
+
   App.math = {
+    Surd,
+    simplifySqrt,
     Poly,
     formatPoly,
     mulberry32,
