@@ -140,7 +140,162 @@
     return a.div(b);
   }
 
+  // ---------- 多項式（多変数） ----------
+  // 項: key（"x2y1" のような次数表記）→ { vars: {x:2,y:1}, coef: Frac }
+  function varsKey(vars) {
+    return Object.keys(vars)
+      .filter((k) => vars[k] !== 0)
+      .sort()
+      .map((k) => k + vars[k])
+      .join("");
+  }
+
+  class Poly {
+    constructor(terms) {
+      this.terms = terms || new Map();
+    }
+    static term(coef, vars) {
+      const p = new Poly();
+      const c = Frac.of(coef);
+      const v = {};
+      for (const k of Object.keys(vars || {})) if (vars[k]) v[k] = vars[k];
+      if (!c.isZero()) p.terms.set(varsKey(v), { vars: v, coef: c });
+      return p;
+    }
+    static const(c) {
+      return Poly.term(c, {});
+    }
+    static var(name, coef) {
+      const v = {};
+      v[name] = 1;
+      return Poly.term(coef === undefined ? 1 : coef, v);
+    }
+    clone() {
+      return new Poly(new Map(this.terms));
+    }
+    _addTerm(t) {
+      const key = varsKey(t.vars);
+      const cur = this.terms.get(key);
+      const coef = cur ? cur.coef.add(t.coef) : t.coef;
+      if (coef.isZero()) this.terms.delete(key);
+      else this.terms.set(key, { vars: t.vars, coef });
+    }
+    add(o) {
+      o = toPoly(o);
+      const p = this.clone();
+      for (const t of o.terms.values()) p._addTerm(t);
+      return p;
+    }
+    sub(o) {
+      return this.add(toPoly(o).scale(-1));
+    }
+    scale(k) {
+      k = Frac.of(k);
+      const p = new Poly();
+      if (k.isZero()) return p;
+      for (const t of this.terms.values()) p._addTerm({ vars: t.vars, coef: t.coef.mul(k) });
+      return p;
+    }
+    mul(o) {
+      o = toPoly(o);
+      const p = new Poly();
+      for (const s of this.terms.values()) {
+        for (const t of o.terms.values()) {
+          const v = Object.assign({}, s.vars);
+          for (const k of Object.keys(t.vars)) v[k] = (v[k] || 0) + t.vars[k];
+          p._addTerm({ vars: v, coef: s.coef.mul(t.coef) });
+        }
+      }
+      return p;
+    }
+    pow(n) {
+      let p = Poly.const(1);
+      for (let i = 0; i < n; i++) p = p.mul(this);
+      return p;
+    }
+    eq(o) {
+      return this.sub(o).isZero();
+    }
+    isZero() {
+      return this.terms.size === 0;
+    }
+    degree() {
+      let d = 0;
+      for (const t of this.terms.values()) d = Math.max(d, totalDeg(t.vars));
+      return d;
+    }
+    // 変数名 → 次数 1 の係数（定数項は ""）
+    coefOf(vars) {
+      const t = this.terms.get(varsKey(vars || {}));
+      return t ? t.coef : new Frac(0);
+    }
+    evaluate(env) {
+      let s = new Frac(0);
+      for (const t of this.terms.values()) {
+        let v = t.coef;
+        for (const k of Object.keys(t.vars)) {
+          if (!(k in env)) throw new Error("evaluate: 変数 " + k + " の値がない");
+          const base = Frac.of(env[k]);
+          for (let i = 0; i < t.vars[k]; i++) v = v.mul(base);
+        }
+        s = s.add(v);
+      }
+      return s;
+    }
+  }
+  function toPoly(o) {
+    return o instanceof Poly ? o : Poly.const(o);
+  }
+  function totalDeg(vars) {
+    let d = 0;
+    for (const k of Object.keys(vars)) d += vars[k];
+    return d;
+  }
+
+  const SUP = { 2: "²", 3: "³", 4: "⁴" };
+  function monoStr(vars) {
+    return Object.keys(vars)
+      .sort()
+      .map((k) => k + (vars[k] === 1 ? "" : SUP[vars[k]] || "^" + vars[k]))
+      .join("");
+  }
+  function sortedTerms(p) {
+    return Array.from(p.terms.values()).sort((s, t) => {
+      const d = totalDeg(t.vars) - totalDeg(s.vars);
+      if (d) return d;
+      // 同じ次数: 変数名のアルファベット順（x² + xy + y² になるよう、先頭変数の次数が高い方を先に）
+      const ks = monoKeyForSort(s.vars),
+        kt = monoKeyForSort(t.vars);
+      return ks < kt ? -1 : ks > kt ? 1 : 0;
+    });
+  }
+  function monoKeyForSort(vars) {
+    // "x2" と "x1y1" と "y2" を x²、xy、y² の順にするため、変数ごとに文字を次数分くり返す
+    return Object.keys(vars)
+      .sort()
+      .map((k) => k.repeat(vars[k]))
+      .join("");
+  }
+  function coefMono(coef, vars, first) {
+    const mono = monoStr(vars);
+    const neg = coef.isNeg();
+    const ac = coef.abs();
+    let body;
+    if (mono === "") body = ac.toString();
+    else if (ac.n === 1 && ac.d === 1) body = mono;
+    else body = ac.toString() + mono;
+    if (first) return (neg ? "-" : "") + body;
+    return (neg ? " - " : " + ") + body;
+  }
+  function formatPoly(p) {
+    const ts = sortedTerms(p);
+    if (ts.length === 0) return "0";
+    return ts.map((t, i) => coefMono(t.coef, t.vars, i === 0)).join("");
+  }
+
   App.math = {
+    Poly,
+    formatPoly,
     mulberry32,
     randInt,
     randNonZero,
