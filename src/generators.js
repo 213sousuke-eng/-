@@ -415,11 +415,328 @@
     );
   }
 
+  // ========== 中2 ==========
+
+  // 先頭以外に続ける多項式: " + 3y" / " - 3y"
+  function plusPoly(p) {
+    const s = formatPoly(p);
+    return s[0] === "-" ? " - " + s.slice(1) : " + " + s;
+  }
+  function monoParen(p) {
+    const s = formatPoly(p);
+    return s[0] === "-" ? "(" + s + ")" : s;
+  }
+  function randMono(rng, vars, maxCoef, maxDeg) {
+    const v = {};
+    for (const name of vars) if (rng() < 0.7) v[name] = randInt(rng, 1, maxDeg);
+    if (Object.keys(v).length === 0) v[vars[0]] = 1;
+    return Poly.term(randNonZero(rng, -maxCoef, maxCoef), v);
+  }
+  function monoParts(p) {
+    const t = Array.from(p.terms.values())[0];
+    return { coef: t.coef, vars: t.vars };
+  }
+  // 単項式の典型的な誤り
+  function monoMistakes(rng, result, coefWrong) {
+    const { coef, vars } = monoParts(result);
+    const out = [result.scale(-1)];
+    const names = Object.keys(vars);
+    const n = pick(rng, names);
+    const v2 = Object.assign({}, vars);
+    v2[n] = vars[n] + 1;
+    out.push(Poly.term(coef, v2));
+    if (vars[n] > 1) {
+      const v3 = Object.assign({}, vars);
+      v3[n] = vars[n] - 1;
+      out.push(Poly.term(coef, v3));
+    }
+    if (coefWrong && !coefWrong.eq(coef) && !coefWrong.isZero()) out.push(Poly.term(coefWrong, vars));
+    return out;
+  }
+  function lcm(a, b) {
+    return Math.abs(a * b) / M.gcd(a, b);
+  }
+  // 分母をそろえて (ax + by)/L の形にする（整数係数ならそのまま）
+  function formatOverDen(p) {
+    let L = 1;
+    for (const t of p.terms.values()) L = lcm(L, t.coef.d);
+    if (L === 1) return formatPoly(p);
+    return "(" + formatPoly(p.scale(L)) + ")/" + L;
+  }
+
+  // ---- 式の計算 ----
+  function genPolycalc(rng, level) {
+    const vs = pick(rng, [["x", "y"], ["a", "b"]]);
+    const [u, v] = vs;
+    const r = () => randNonZero(rng, -9, 9);
+    const two = () => Poly.var(u, r()).add(Poly.var(v, r()));
+    const tmpl = level === 1 ? pick(rng, ["addsub", "monomul", "monodiv"]) : pick(rng, ["ksub", "frac", "three"]);
+    let prompt, result, meta, wrong = [], fmt = formatPoly, steps;
+    if (tmpl === "addsub" || tmpl === "ksub") {
+      const p1 = two(),
+        p2 = two();
+      const k = tmpl === "addsub" ? 1 : randInt(rng, 2, 5) * pick(rng, [1, -1]);
+      const m = tmpl === "addsub" ? pick(rng, [1, -1]) : -randInt(rng, 2, 5);
+      result = p1.scale(k).add(p2.scale(m));
+      if (tmpl === "addsub") prompt = "(" + formatPoly(p1) + ") " + (m > 0 ? "+" : "-") + " (" + formatPoly(p2) + ")";
+      else prompt = kParen(k, p1) + " - " + kParen(-m, p2);
+      // 後ろのかっこの2つ目の項の符号を変え忘れる
+      const t2 = Poly.var(v, p2.coefOf(((o) => ((o[v] = 1), o))({})));
+      if (m < 0) wrong.push(result.add(t2.scale(-2 * m)));
+      wrong.push(p1.scale(k).sub(p2.scale(m)));
+      wrong.push(result.add(Poly.var(u, pick(rng, [1, -1]))));
+      meta = { parts: [{ k: new Frac(k), p: p1 }, { k: new Frac(m), p: p2 }], result };
+      steps = [
+        "かっこをはずす: " + formatPoly(p1.scale(k)) + plusPoly(p2.scale(m)),
+        "同類項をまとめる: " + formatPoly(result),
+      ];
+    } else if (tmpl === "monomul") {
+      const a = randMono(rng, vs, 6, 2),
+        b = randMono(rng, vs, 6, 2);
+      result = a.mul(b);
+      prompt = formatPoly(a) + " × " + monoParen(b);
+      wrong = monoMistakes(rng, result, monoParts(a).coef.add(monoParts(b).coef));
+      meta = { num: [a, b], den: [], result };
+      steps = ["係数どうし、文字どうしをかける（同じ文字は指数をたす）", formatPoly(result)];
+    } else if (tmpl === "monodiv") {
+      const q = randMono(rng, vs, 6, 2),
+        d = randMono(rng, vs, 5, 1);
+      need(!monoParts(d).coef.abs().eq(1) || rng() < 0.3, "除数の係数");
+      const n = q.mul(d);
+      result = q;
+      prompt = formatPoly(n) + " ÷ " + monoParen(d);
+      wrong = monoMistakes(rng, result, monoParts(n).coef.sub(monoParts(d).coef));
+      meta = { num: [n], den: [d], result };
+      steps = [
+        "分数の形にする: " + formatPoly(n) + " / " + monoParen(d),
+        "係数どうし、文字どうしで約分する: " + formatPoly(result),
+      ];
+    } else if (tmpl === "frac") {
+      const P = randInt(rng, 2, 4),
+        Q = randInt(rng, 2, 5);
+      need(P !== Q, "P≠Q");
+      const p1 = Poly.var(u, randNonZero(rng, -4, 4)).add(Poly.var(v, randNonZero(rng, -4, 4)));
+      const p2 = Poly.var(u, randNonZero(rng, -4, 4)).add(Poly.var(v, randNonZero(rng, -4, 4)));
+      const sg = pick(rng, [1, -1]);
+      result = p1.scale(new Frac(1, P)).add(p2.scale(new Frac(sg, Q)));
+      need(!result.isZero() && result.terms.size === 2, "2項残す");
+      prompt = "(" + formatPoly(p1) + ")/" + P + (sg > 0 ? " + " : " - ") + "(" + formatPoly(p2) + ")/" + Q;
+      fmt = formatOverDen;
+      const L = lcm(P, Q);
+      // 後ろの分子の2つ目の項の符号ミス
+      const wrongNum = p1.scale(L / P).add(p2.scale((sg * L) / Q));
+      const t2 = Poly.var(v, p2.coefOf(((o) => ((o[v] = 1), o))({})));
+      if (sg < 0) wrong.push(wrongNum.add(t2.scale((2 * L) / Q)).scale(new Frac(1, L)));
+      // 分母をはらってしまう誤り（分子だけ）
+      wrong.push(result.scale(L));
+      wrong.push(p1.scale(new Frac(1, P)).sub(p2.scale(new Frac(sg, Q))));
+      meta = { parts: [{ k: new Frac(1, P), p: p1 }, { k: new Frac(sg, Q), p: p2 }], result, answerFmt: "overden" };
+      steps = [
+        "分母を " + L + " にそろえる: (" + formatPoly(p1.scale(L / P)) + ")/" + L + (sg > 0 ? " + " : " - ") +
+          "(" + formatPoly(p2.scale(L / Q)) + ")/" + L,
+        "分子を計算する: " + formatOverDen(result),
+      ];
+    } else {
+      // a ÷ b × c
+      const q = randMono(rng, vs, 4, 1),
+        d = randMono(rng, vs, 4, 1),
+        c = randMono(rng, vs, 3, 2);
+      const n = q.mul(d);
+      result = q.mul(c);
+      need(result.degree() <= 5, "次数");
+      prompt = formatPoly(n) + " ÷ " + monoParen(d) + " × " + monoParen(c);
+      wrong = monoMistakes(rng, result);
+      // 先に d × c を計算してからわってしまう誤り（係数を c² でわったもの）
+      const cc = monoParts(c).coef;
+      if (!cc.abs().eq(1)) wrong.push(result.scale(new Frac(1).div(cc.mul(cc))));
+      meta = { num: [n, c], den: [d], result };
+      steps = [
+        "わり算は逆数のかけ算にする: " + formatPoly(n) + " × 1/" + monoParen(d) + " × " + monoParen(c),
+        "係数どうし、文字どうしで計算する: " + formatPoly(result),
+      ];
+    }
+    need(!result.isZero(), "0");
+    const correct = fmt(result);
+    return choiceProblem(
+      rng,
+      { unitId: "polycalc", level, prompt: "次の計算をしなさい。\n" + prompt, steps, meta },
+      correct,
+      wrong.filter((w) => !w.isZero()).map(fmt),
+      () => fmt(result.add(Poly.term(randNonZero(rng, -3, 3), monoParts(result).vars)))
+    );
+  }
+
+  // ---- 連立方程式 ----
+  function genSimul(rng, level) {
+    const tmpl = level === 1 ? "basic" : pick(rng, ["general", "paren", "frac"]);
+    const P = randInt(rng, 2, 4),
+      Q = randInt(rng, 2, 4);
+    const x0 = tmpl === "frac" ? P * randInt(rng, -2, 2) : randInt(rng, -6, 6),
+      y0 = tmpl === "frac" ? Q * randInt(rng, -2, 2) : randInt(rng, -6, 6);
+    const X = Poly.var("x"),
+      Y = Poly.var("y");
+    const env = { x: x0, y: y0 };
+    let eqs, lines;
+    const r = (m) => randNonZero(rng, -m, m);
+    if (level === 1) {
+      const a1 = r(5),
+        b1 = r(5);
+      let a2, b2;
+      if (rng() < 0.5) {
+        a2 = r(5);
+        b2 = pick(rng, [b1, -b1]);
+      } else {
+        a2 = pick(rng, [a1, -a1]);
+        b2 = r(5);
+      }
+      const l1 = X.scale(a1).add(Y.scale(b1)),
+        l2 = X.scale(a2).add(Y.scale(b2));
+      eqs = [
+        { lhs: l1, rhs: Poly.const(l1.evaluate(env)) },
+        { lhs: l2, rhs: Poly.const(l2.evaluate(env)) },
+      ];
+      lines = eqs.map((e) => formatPoly(e.lhs) + " = " + formatPoly(e.rhs));
+    } else {
+      const a2 = r(6),
+        b2 = r(6);
+      const l2 = X.scale(a2).add(Y.scale(b2));
+      const e2 = { lhs: l2, rhs: Poly.const(l2.evaluate(env)) };
+      let e1, line1;
+      if (tmpl === "general") {
+        const a1 = r(6),
+          b1 = r(6);
+        need(Math.abs(a1) !== Math.abs(a2) && Math.abs(b1) !== Math.abs(b2), "倍数関係なし");
+        need(a2 % a1 !== 0 && a1 % a2 !== 0, "倍数関係なし");
+        const l1 = X.scale(a1).add(Y.scale(b1));
+        e1 = { lhs: l1, rhs: Poly.const(l1.evaluate(env)) };
+        line1 = formatPoly(e1.lhs) + " = " + formatPoly(e1.rhs);
+      } else if (tmpl === "paren") {
+        const k = randInt(rng, 2, 4),
+          pc = r(4),
+          q = r(5);
+        const inner = X.add(Y.scale(pc));
+        const l1 = inner.scale(k).add(Y.scale(q));
+        need(!l1.coefOf({ y: 1 }).isZero(), "y が消える");
+        e1 = { lhs: l1, rhs: Poly.const(l1.evaluate(env)) };
+        line1 = kParen(k, inner) + plusPoly(Y.scale(q)) + " = " + formatPoly(e1.rhs);
+      } else {
+        const sg = pick(rng, [1, -1]);
+        const l1 = X.scale(new Frac(1, P)).add(Y.scale(new Frac(sg, Q)));
+        e1 = { lhs: l1, rhs: Poly.const(l1.evaluate(env)) };
+        line1 = "x/" + P + (sg > 0 ? " + " : " - ") + "y/" + Q + " = " + formatPoly(e1.rhs);
+      }
+      eqs = rng() < 0.5 ? [e1, e2] : [e2, e1];
+      lines = eqs.map((e) => (e === e1 ? line1 : formatPoly(e.lhs) + " = " + formatPoly(e.rhs)));
+    }
+    // 整理した係数（整数化）
+    const norm = eqs.map((e) => {
+      let d = e.lhs.sub(e.rhs);
+      let L = 1;
+      for (const t of d.terms.values()) L = lcm(L, t.coef.d);
+      d = d.scale(L);
+      return { a: d.coefOf({ x: 1 }), b: d.coefOf({ y: 1 }), c: d.coefOf({}).neg() };
+    });
+    const det = norm[0].a.mul(norm[1].b).sub(norm[0].b.mul(norm[1].a));
+    need(!det.isZero(), "解が一意でない");
+    const steps = [];
+    const show = (n) => formatPoly(X.scale(n.a).add(Y.scale(n.b))) + " = " + n.c.toString();
+    if (level === 2) steps.push("式を整理する: " + show(norm[0]) + "、" + show(norm[1]));
+    const A1 = norm[0].a.n,
+      A2 = norm[1].a.n;
+    const L = lcm(A1, A2);
+    const m1 = L / Math.abs(A1),
+      m2 = L / Math.abs(A2);
+    const same = A1 * A2 > 0;
+    const sg = same ? -1 : 1;
+    const K = norm[0].b.mul(m1).add(norm[1].b.mul(m2 * sg));
+    const R = norm[0].c.mul(m1).add(norm[1].c.mul(m2 * sg));
+    const mulTxt = (m) => (m === 1 ? "そのまま" : m + " 倍");
+    steps.push(
+      "x を消去する: 上の式を" + mulTxt(m1) + "、下の式を" + mulTxt(m2) + "して" + (same ? "ひく" : "たす") + "と " +
+        formatPoly(Y.scale(K)) + " = " + R.toString()
+    );
+    steps.push("y = " + y0 + " を代入して x = " + x0);
+    return {
+      unitId: "simul",
+      level,
+      prompt: "次の連立方程式を解きなさい。\n" + lines.join("\n"),
+      answerType: "number",
+      answer: [String(x0), String(y0)],
+      fields: ["x", "y"],
+      steps,
+      meta: { eqs },
+    };
+  }
+
+  // ---- 一次関数の式 ----
+  function lineStr(a, b) {
+    return "y = " + formatPoly(Poly.var("x", a).add(Poly.const(b)));
+  }
+  function pt(x, y) {
+    return "(" + x.toString() + ", " + y.toString() + ")";
+  }
+  function genLinfunc(rng, level) {
+    let a, b, points, prompt, steps;
+    if (level === 1) {
+      a = new Frac(randNonZero(rng, -5, 5));
+      b = new Frac(randInt(rng, -9, 9));
+      const px = new Frac(randNonZero(rng, -4, 4));
+      const py = a.mul(px).add(b);
+      points = [[px, py], [px.add(1), py.add(a)]];
+      if (rng() < 0.6) {
+        prompt = "傾きが " + a.toString() + " で、点 " + pt(px, py) + " を通る直線の式を求めなさい。";
+        steps = [
+          "y = " + formatPoly(Poly.var("x", a)) + " + b に " + pt(px, py) + " を代入: " + py.toString() + " = " + a.toString() + " × " + paren(px) + " + b",
+          "b = " + b.toString() + " より " + lineStr(a, b),
+        ];
+      } else {
+        prompt = "切片が " + b.toString() + " で、点 " + pt(px, py) + " を通る直線の式を求めなさい。";
+        steps = [
+          "y = ax " + (b.isNeg() ? "- " + b.abs().toString() : "+ " + b.toString()) + " に " + pt(px, py) + " を代入",
+          py.toString() + " = " + paren(px) + "a + " + paren(b) + " より a = " + a.toString(),
+          lineStr(a, b),
+        ];
+      }
+    } else {
+      const d = pick(rng, [1, 2, 3]);
+      let n = randNonZero(rng, -6, 6);
+      need(M.gcd(n, d) === 1, "既約");
+      a = new Frac(n, d);
+      b = new Frac(randInt(rng, -9, 9));
+      const x1 = new Frac(d * randInt(rng, -3, 3));
+      const x2 = new Frac(d * randInt(rng, -3, 3));
+      need(!x1.eq(x2), "x1≠x2");
+      const y1 = a.mul(x1).add(b),
+        y2 = a.mul(x2).add(b);
+      points = [[x1, y1], [x2, y2]];
+      prompt = "2点 " + pt(x1, y1) + "、" + pt(x2, y2) + " を通る直線の式を求めなさい。";
+      steps = [
+        "傾き = (" + y2.toString() + " - " + paren(y1) + ") ÷ (" + x2.toString() + " - " + paren(x1) + ") = " + a.toString(),
+        y1.toString() + " = " + a.toString() + " × " + paren(x1) + " + b より b = " + b.toString(),
+        lineStr(a, b),
+      ];
+    }
+    const [[x1, y1]] = points;
+    const wrongs = [lineStr(a, b.neg()), lineStr(a.neg(), b), lineStr(a, y1.add(a.mul(x1)))];
+    if (!b.isZero()) wrongs.push(lineStr(b, a));
+    wrongs.push(lineStr(new Frac(1).div(a), b));
+    return choiceProblem(
+      rng,
+      { unitId: "linfunc", level, prompt, steps, meta: { a, b, points } },
+      lineStr(a, b),
+      wrongs,
+      () => lineStr(a, b.add(randNonZero(rng, -3, 3)))
+    );
+  }
+
   const GENERATORS = {
     signed: genSigned,
     linexpr: genLinexpr,
     lineq: genLineq,
     proportion: genProportion,
+    polycalc: genPolycalc,
+    simul: genSimul,
+    linfunc: genLinfunc,
   };
 
   // ---------- 予備問題（生成に失敗し続けた場合のみ使用） ----------
@@ -544,10 +861,11 @@
     GENERATORS,
     FALLBACK,
     makeChoices,
+    formatOverDen,
     validateProblem,
     generate,
     // 単元追加用の内部ヘルパー
-    _h: { choiceProblem, paren, lin, kParen, side, niceFrac, need },
+    _h: { choiceProblem, paren, lin, kParen, side, niceFrac, need, plusPoly, monoParen, lcm, formatOverDen },
   };
   App.gen = api;
   if (typeof module !== "undefined") module.exports = api;
