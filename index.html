@@ -134,6 +134,7 @@ h2 { margin: 6px 0 0; font-size: 0.95rem; color: var(--muted); letter-spacing: 0
 .instr { margin: 0 0 10px; color: var(--muted); font-size: 0.9rem; }
 .prompt { font-size: 1.3rem; line-height: 2; font-weight: 600; letter-spacing: 0.01em; }
 .prompt.small { font-size: 1.05rem; }
+.prompt.text { font-size: 1.1rem; line-height: 1.9; }
 
 .frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.15; margin: 0 0.1em; font-size: 0.9em; }
 .frac .num { padding: 0 0.15em; border-bottom: 1.5px solid currentColor; }
@@ -2302,6 +2303,11 @@ th { color: var(--muted); font-size: 0.8rem; font-weight: 600; }
     return s.replace(/\n/g, "<br>");
   }
 
+  // 数式の行がない文章だけの問題（比例・一次関数など）か
+  function isTextOnly(lines) {
+    return lines.length < 2 || /[\u3040-\u30ff\u4e00-\u9fff]/.test(lines[lines.length - 1]);
+  }
+
   // ---------- 画面 ----------
   const LEVEL_NAMES = { 1: "基本", 2: "受験レベル" };
 
@@ -2458,6 +2464,7 @@ th { color: var(--muted); font-size: 0.8rem; font-weight: 600; }
       const p = s.current();
       if (!p) return renderResult();
       const lines = p.prompt.split("\n");
+      const textOnly = isTextOnly(lines);
       const feedback = h("div", { class: "feedback", "data-testid": "feedback", hidden: true, "aria-live": "polite" });
       const msg = h("p", { class: "msg", "aria-live": "polite" });
       const nextBtn = h(
@@ -2571,10 +2578,12 @@ th { color: var(--muted); font-size: 0.8rem; font-weight: 600; }
             h("span", { class: "progress", "data-testid": "progress" }, s.index + 1 + " / " + s.size),
           ]),
           h("div", { class: "bar" }, h("div", { class: "bar-in", style: "width:" + (s.index / s.size) * 100 + "%" })),
-          h("section", { class: "card question" }, [
-            h("p", { class: "instr" }, lines[0]),
-            h("div", { class: "prompt", "data-testid": "prompt", html: renderMath(lines.slice(1).join("\n")) }),
-          ]),
+          h("section", { class: "card question" }, textOnly
+            ? [h("div", { class: "prompt text", "data-testid": "prompt", html: renderMath(p.prompt) })]
+            : [
+                h("p", { class: "instr" }, lines[0]),
+                h("div", { class: "prompt", "data-testid": "prompt", html: renderMath(lines.slice(1).join("\n")) }),
+              ]),
           answerArea,
           msg,
           feedback,
@@ -2585,6 +2594,10 @@ th { color: var(--muted); font-size: 0.8rem; font-weight: 600; }
     }
 
     // ----- 結果 -----
+    function reviewText(prompt) {
+      const ls = prompt.split("\n");
+      return isTextOnly(ls) ? prompt : ls.slice(1).join("\n");
+    }
     function renderResult() {
       const s = state.session;
       const res = s.results();
@@ -2608,7 +2621,7 @@ th { color: var(--muted); font-size: 0.8rem; font-weight: 600; }
                 h("h2", null, "間違えた問題"),
                 ...wrong.map((r) =>
                   h("div", { class: "card review-item" }, [
-                    h("div", { class: "prompt small", html: renderMath(r.problem.prompt.split("\n").slice(1).join("\n")) }),
+                    h("div", { class: "prompt small", html: renderMath(reviewText(r.problem.prompt)) }),
                     h("p", null, [h("span", { class: "label" }, "あなたの答え "), h("span", { class: "given", html: renderMath(fmtGiven(r)) })]),
                     h("p", null, [h("span", { class: "label" }, "正解 "), h("span", { html: renderMath(fmtAns(r.problem)) })]),
                     h("ol", { class: "steps" }, r.problem.steps.map((st) => h("li", { html: renderMath(st) }))),
