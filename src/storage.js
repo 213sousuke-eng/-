@@ -95,6 +95,10 @@
         data.flags[name] = true;
         save();
       },
+      clearFlag(name) {
+        delete data.flags[name];
+        save();
+      },
       get persistent() {
         return persistent;
       },

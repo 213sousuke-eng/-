@@ -80,3 +80,11 @@ test("reset とフラグ", () => {
   assert.equal(createStore(b).stats("expand").count, 0);
   assert.equal(createStore(b).getFlag("a2hsClosed"), true);
 });
+
+test("clearFlag", () => {
+  const b = memBackend();
+  const s = createStore(b);
+  s.setFlag("level2");
+  s.clearFlag("level2");
+  assert.equal(createStore(b).getFlag("level2"), false);
+});

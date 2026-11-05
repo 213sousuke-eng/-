@@ -1,0 +1,2695 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="数学トレ">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f6f4ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181d" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<title>中学数学 計算トレーニング</title>
+<style>
+:root {
+  --bg: #f6f4ee;
+  --grid: rgba(31, 42, 68, 0.06);
+  --card: #ffffff;
+  --ink: #1f2a44;
+  --muted: #5d6680;
+  --line: #dcd8cc;
+  --accent: #2b59c3;
+  --accent-ink: #ffffff;
+  --ok: #17845b;
+  --ok-bg: #e5f4ec;
+  --ng: #c2410c;
+  --ng-bg: #fdece4;
+  --mid: #b7791f;
+  --shadow: 0 1px 2px rgba(31, 42, 68, 0.08), 0 2px 8px rgba(31, 42, 68, 0.06);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181d;
+    --grid: rgba(255, 255, 255, 0.04);
+    --card: #20232b;
+    --ink: #e8eaf0;
+    --muted: #a3a9ba;
+    --line: #353a46;
+    --accent: #7aa2ff;
+    --accent-ink: #0f1420;
+    --ok: #4cc38a;
+    --ok-bg: #173327;
+    --ng: #ff8a5c;
+    --ng-bg: #3a2119;
+    --mid: #e0b354;
+    --shadow: none;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  -webkit-tap-highlight-color: transparent;
+}
+#app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(32px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+.loading { text-align: center; color: var(--muted); padding: 40px 0; }
+.screen { display: flex; flex-direction: column; gap: 14px; }
+
+button {
+  font: inherit;
+  color: inherit;
+  min-height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  padding: 10px 16px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button:disabled { cursor: default; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+button.secondary { background: transparent; }
+button.danger { background: transparent; color: var(--ng); border-color: var(--ng); }
+button.link { border: none; background: none; color: var(--accent); padding: 8px 4px; font-weight: 600; }
+button[hidden], [hidden] { display: none !important; }
+
+/* 上部 */
+.top { display: flex; align-items: center; gap: 8px; min-height: 48px; }
+.top .title { flex: 1; font-weight: 700; font-size: 0.95rem; color: var(--muted); }
+.home .top { align-items: flex-start; justify-content: space-between; padding-top: 8px; }
+h1 { margin: 0; font-size: 1.15rem; line-height: 1.3; letter-spacing: 0.04em; }
+h1 .sub { font-size: 1.7rem; letter-spacing: 0.02em; }
+h2 { margin: 6px 0 0; font-size: 0.95rem; color: var(--muted); letter-spacing: 0.08em; }
+.progress { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); }
+.notice { margin: 0; padding: 12px 14px; border-radius: 12px; font-size: 0.9rem; }
+.notice.warn { background: var(--ng-bg); color: var(--ng); }
+.notice.a2hs { background: var(--card); border: 1px dashed var(--line); display: flex; align-items: center; gap: 8px; }
+.notice.a2hs p { margin: 0; flex: 1; }
+
+/* 難易度 */
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; }
+.seg button { border: none; min-height: 44px; border-radius: 9px; background: transparent; color: var(--muted); font-weight: 600; }
+.seg button.on { background: var(--ink); color: var(--bg); }
+
+.mix { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 14px 18px; text-align: left; }
+.mix span { font-size: 1.15rem; }
+.mix small { font-weight: 400; opacity: 0.9; }
+
+/* 単元 */
+.units { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 6px; }
+.unit { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 12px 14px; box-shadow: var(--shadow); }
+.unit-name { font-weight: 700; }
+.unit-rate { font-size: 0.85rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+.rate-none { color: var(--muted); font-weight: 400; }
+.rate-good { color: var(--ok); }
+.rate-mid { color: var(--mid); }
+.rate-low { color: var(--ng); }
+
+/* 出題 */
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar-in { height: 100%; background: var(--accent); transition: width 0.25s; }
+.question { padding: 18px 18px 22px; }
+.instr { margin: 0 0 10px; color: var(--muted); font-size: 0.9rem; }
+.prompt { font-size: 1.3rem; line-height: 2; font-weight: 600; letter-spacing: 0.01em; }
+.prompt.small { font-size: 1.05rem; }
+
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.15; margin: 0 0.1em; font-size: 0.9em; }
+.frac .num { padding: 0 0.15em; border-bottom: 1.5px solid currentColor; }
+.frac .den { padding: 0 0.15em; }
+
+.choices { display: flex; flex-direction: column; gap: 10px; }
+.choice { font-size: 1.15rem; font-weight: 600; text-align: left; padding: 12px 16px; min-height: 56px; box-shadow: var(--shadow); }
+.choice.correct { background: var(--ok-bg); border-color: var(--ok); color: var(--ok); }
+.choice.wrong { background: var(--ng-bg); border-color: var(--ng); color: var(--ng); }
+.choice:disabled:not(.correct):not(.wrong) { opacity: 0.55; }
+
+.num-answer { display: flex; flex-direction: column; gap: 10px; }
+.field { display: flex; align-items: center; gap: 10px; }
+.fname { font-weight: 700; min-width: 2.5em; }
+input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 1.3rem;
+  min-height: 52px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+}
+input[type="text"]:disabled { opacity: 0.7; }
+.hint { margin: 0; color: var(--muted); font-size: 0.85rem; }
+.msg { margin: 0; color: var(--ng); font-weight: 700; min-height: 0; }
+.msg:empty { display: none; }
+
+.feedback { border-radius: 16px; padding: 14px 16px; border: 1.5px solid; }
+.feedback.ok { background: var(--ok-bg); border-color: var(--ok); }
+.feedback.ng { background: var(--ng-bg); border-color: var(--ng); }
+.verdict { margin: 0; font-size: 1.3rem; font-weight: 800; }
+.feedback.ok .verdict { color: var(--ok); }
+.feedback.ng .verdict { color: var(--ng); }
+.answer { margin: 6px 0 0; font-size: 1.15rem; font-weight: 700; }
+.label { color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+details { margin-top: 8px; }
+summary { cursor: pointer; font-weight: 700; min-height: 32px; }
+.steps { margin: 6px 0 0; padding-left: 1.4em; line-height: 2; }
+.steps li { margin: 2px 0; }
+
+/* 結果 */
+.score-card { text-align: center; padding: 28px 16px; }
+.score { margin: 0; font-size: 1.2rem; }
+.score strong { font-size: 3rem; color: var(--accent); margin: 0 4px; font-variant-numeric: tabular-nums; }
+.comment { margin: 4px 0 0; color: var(--muted); }
+.review { display: flex; flex-direction: column; gap: 10px; }
+.review-item p { margin: 6px 0 0; }
+.given { color: var(--ng); font-weight: 600; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* 記録 */
+.table-wrap { padding: 4px 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { padding: 10px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+tbody tr:last-child td { border-bottom: none; }
+th { color: var(--muted); font-size: 0.8rem; font-weight: 600; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+</style>
+</head>
+<body>
+<div id="app"><p class="loading">読み込み中…</p></div>
+<noscript><p class="loading">このアプリを使うには JavaScript を有効にしてください。</p></noscript>
+<script>
+// ---- math.js ----
+(function (root) {
+  "use strict";
+  const App = (root.MathApp = root.MathApp || {});
+
+  // ---------- 乱数 ----------
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function randInt(rng, min, max) {
+    return min + Math.floor(rng() * (max - min + 1));
+  }
+  function randNonZero(rng, min, max) {
+    for (;;) {
+      const v = randInt(rng, min, max);
+      if (v !== 0) return v;
+    }
+  }
+  function pick(rng, arr) {
+    return arr[Math.floor(rng() * arr.length)];
+  }
+  function shuffle(rng, arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      const t = a[i];
+      a[i] = a[j];
+      a[j] = t;
+    }
+    return a;
+  }
+
+  // ---------- 分数 ----------
+  function gcd(a, b) {
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while (b) {
+      const t = a % b;
+      a = b;
+      b = t;
+    }
+    return a;
+  }
+
+  class Frac {
+    constructor(n, d) {
+      if (d === undefined) d = 1;
+      if (!Number.isInteger(n) || !Number.isInteger(d)) throw new Error("Frac: 整数でない値 " + n + "/" + d);
+      if (d === 0) throw new Error("Frac: 分母が0");
+      if (d < 0) {
+        n = -n;
+        d = -d;
+      }
+      const g = gcd(n, d) || 1;
+      this.n = n / g + 0; // -0 を 0 に
+      this.d = d / g;
+      if (!Number.isSafeInteger(this.n) || !Number.isSafeInteger(this.d)) throw new Error("Frac: 桁あふれ");
+    }
+    static of(x) {
+      return x instanceof Frac ? x : new Frac(x, 1);
+    }
+    add(o) {
+      o = Frac.of(o);
+      return new Frac(this.n * o.d + o.n * this.d, this.d * o.d);
+    }
+    sub(o) {
+      o = Frac.of(o);
+      return new Frac(this.n * o.d - o.n * this.d, this.d * o.d);
+    }
+    mul(o) {
+      o = Frac.of(o);
+      return new Frac(this.n * o.n, this.d * o.d);
+    }
+    div(o) {
+      o = Frac.of(o);
+      if (o.n === 0) throw new Error("Frac: 0で割った");
+      return new Frac(this.n * o.d, this.d * o.n);
+    }
+    neg() {
+      return new Frac(-this.n, this.d);
+    }
+    abs() {
+      return new Frac(Math.abs(this.n), this.d);
+    }
+    eq(o) {
+      o = Frac.of(o);
+      return this.n === o.n && this.d === o.d;
+    }
+    isZero() {
+      return this.n === 0;
+    }
+    isInt() {
+      return this.d === 1;
+    }
+    isNeg() {
+      return this.n < 0;
+    }
+    toNumber() {
+      return this.n / this.d;
+    }
+    toString() {
+      return this.d === 1 ? String(this.n) : this.n + "/" + this.d;
+    }
+  }
+
+  // ---------- 入力の解析 ----------
+  function normalizeInput(text) {
+    let s = String(text == null ? "" : text);
+    if (s.normalize) s = s.normalize("NFKC");
+    return s.replace(/[−ー‐-―ｰ]/g, "-").replace(/\s+/g, "");
+  }
+
+  function decToFrac(str) {
+    const neg = str[0] === "-";
+    if (str[0] === "-" || str[0] === "+") str = str.slice(1);
+    const parts = str.split(".");
+    const dec = parts[1] || "";
+    if (dec.length > 9) return null;
+    const den = Math.pow(10, dec.length);
+    const num = parseInt(parts[0], 10) * den + (dec ? parseInt(dec, 10) : 0);
+    if (!Number.isSafeInteger(num)) return null;
+    return new Frac(neg ? -num : num, den);
+  }
+
+  function parseAnswer(text) {
+    const s = normalizeInput(text);
+    const m = /^([+-]?\d+(?:\.\d+)?)(?:\/([+-]?\d+))?$/.exec(s);
+    if (!m) return null;
+    const a = decToFrac(m[1]);
+    if (!a) return null;
+    if (m[2] === undefined) return a;
+    const b = parseInt(m[2], 10);
+    if (!Number.isSafeInteger(b) || b === 0) return null;
+    return a.div(b);
+  }
+
+  // ---------- 多項式（多変数） ----------
+  // 項: key（"x2y1" のような次数表記）→ { vars: {x:2,y:1}, coef: Frac }
+  function varsKey(vars) {
+    return Object.keys(vars)
+      .filter((k) => vars[k] !== 0)
+      .sort()
+      .map((k) => k + vars[k])
+      .join("");
+  }
+
+  class Poly {
+    constructor(terms) {
+      this.terms = terms || new Map();
+    }
+    static term(coef, vars) {
+      const p = new Poly();
+      const c = Frac.of(coef);
+      const v = {};
+      for (const k of Object.keys(vars || {})) if (vars[k]) v[k] = vars[k];
+      if (!c.isZero()) p.terms.set(varsKey(v), { vars: v, coef: c });
+      return p;
+    }
+    static const(c) {
+      return Poly.term(c, {});
+    }
+    static var(name, coef) {
+      const v = {};
+      v[name] = 1;
+      return Poly.term(coef === undefined ? 1 : coef, v);
+    }
+    clone() {
+      return new Poly(new Map(this.terms));
+    }
+    _addTerm(t) {
+      const key = varsKey(t.vars);
+      const cur = this.terms.get(key);
+      const coef = cur ? cur.coef.add(t.coef) : t.coef;
+      if (coef.isZero()) this.terms.delete(key);
+      else this.terms.set(key, { vars: t.vars, coef });
+    }
+    add(o) {
+      o = toPoly(o);
+      const p = this.clone();
+      for (const t of o.terms.values()) p._addTerm(t);
+      return p;
+    }
+    sub(o) {
+      return this.add(toPoly(o).scale(-1));
+    }
+    scale(k) {
+      k = Frac.of(k);
+      const p = new Poly();
+      if (k.isZero()) return p;
+      for (const t of this.terms.values()) p._addTerm({ vars: t.vars, coef: t.coef.mul(k) });
+      return p;
+    }
+    mul(o) {
+      o = toPoly(o);
+      const p = new Poly();
+      for (const s of this.terms.values()) {
+        for (const t of o.terms.values()) {
+          const v = Object.assign({}, s.vars);
+          for (const k of Object.keys(t.vars)) v[k] = (v[k] || 0) + t.vars[k];
+          p._addTerm({ vars: v, coef: s.coef.mul(t.coef) });
+        }
+      }
+      return p;
+    }
+    pow(n) {
+      let p = Poly.const(1);
+      for (let i = 0; i < n; i++) p = p.mul(this);
+      return p;
+    }
+    eq(o) {
+      return this.sub(o).isZero();
+    }
+    isZero() {
+      return this.terms.size === 0;
+    }
+    degree() {
+      let d = 0;
+      for (const t of this.terms.values()) d = Math.max(d, totalDeg(t.vars));
+      return d;
+    }
+    // 変数名 → 次数 1 の係数（定数項は ""）
+    coefOf(vars) {
+      const t = this.terms.get(varsKey(vars || {}));
+      return t ? t.coef : new Frac(0);
+    }
+    evaluate(env) {
+      let s = new Frac(0);
+      for (const t of this.terms.values()) {
+        let v = t.coef;
+        for (const k of Object.keys(t.vars)) {
+          if (!(k in env)) throw new Error("evaluate: 変数 " + k + " の値がない");
+          const base = Frac.of(env[k]);
+          for (let i = 0; i < t.vars[k]; i++) v = v.mul(base);
+        }
+        s = s.add(v);
+      }
+      return s;
+    }
+  }
+  function toPoly(o) {
+    return o instanceof Poly ? o : Poly.const(o);
+  }
+  function totalDeg(vars) {
+    let d = 0;
+    for (const k of Object.keys(vars)) d += vars[k];
+    return d;
+  }
+
+  const SUP = { 2: "²", 3: "³", 4: "⁴" };
+  function monoStr(vars) {
+    return Object.keys(vars)
+      .sort()
+      .map((k) => k + (vars[k] === 1 ? "" : SUP[vars[k]] || "^" + vars[k]))
+      .join("");
+  }
+  function sortedTerms(p) {
+    return Array.from(p.terms.values()).sort((s, t) => {
+      const d = totalDeg(t.vars) - totalDeg(s.vars);
+      if (d) return d;
+      // 同じ次数: 変数名のアルファベット順（x² + xy + y² になるよう、先頭変数の次数が高い方を先に）
+      const ks = monoKeyForSort(s.vars),
+        kt = monoKeyForSort(t.vars);
+      return ks < kt ? -1 : ks > kt ? 1 : 0;
+    });
+  }
+  function monoKeyForSort(vars) {
+    // "x2" と "x1y1" と "y2" を x²、xy、y² の順にするため、変数ごとに文字を次数分くり返す
+    return Object.keys(vars)
+      .sort()
+      .map((k) => k.repeat(vars[k]))
+      .join("");
+  }
+  function coefMono(coef, vars, first) {
+    const mono = monoStr(vars);
+    const neg = coef.isNeg();
+    const ac = coef.abs();
+    let body;
+    if (mono === "") body = ac.toString();
+    else if (ac.n === 1 && ac.d === 1) body = mono;
+    else body = ac.toString() + mono;
+    if (first) return (neg ? "-" : "") + body;
+    return (neg ? " - " : " + ") + body;
+  }
+  function formatPoly(p) {
+    const ts = sortedTerms(p);
+    if (ts.length === 0) return "0";
+    return ts.map((t, i) => coefMono(t.coef, t.vars, i === 0)).join("");
+  }
+
+  // 因数の積の表示。同じ因数はまとめて²、単項式の因数はかっこなしで先頭に置く
+  function formatFactors(factors, coef) {
+    const k = Frac.of(coef === undefined ? 1 : coef);
+    const groups = [];
+    for (const f of factors) {
+      const g = groups.find((gr) => gr.p.eq(f));
+      if (g) g.n++;
+      else groups.push({ p: f, n: 1 });
+    }
+    const monos = groups.filter((g) => g.p.terms.size === 1);
+    const polys = groups.filter((g) => g.p.terms.size > 1);
+    let monoProd = Poly.const(k);
+    for (const g of monos) monoProd = monoProd.mul(g.p.pow(g.n));
+    let head;
+    const ms = formatPoly(monoProd);
+    if (polys.length === 0) return ms;
+    if (ms === "1") head = "";
+    else if (ms === "-1") head = "-";
+    else head = ms;
+    return (
+      head +
+      polys
+        .map((g) => "(" + formatPoly(g.p) + ")" + (g.n === 1 ? "" : SUP[g.n] || "^" + g.n))
+        .join("")
+    );
+  }
+
+  // ---------- 根号 ----------
+  function simplifySqrt(n) {
+    if (!Number.isInteger(n) || n < 0) throw new Error("simplifySqrt: 不正な値 " + n);
+    if (n === 0) return { k: 0, r: 1 };
+    let k = 1,
+      r = n;
+    for (let f = 2; f * f <= r; f++) {
+      while (r % (f * f) === 0) {
+        r /= f * f;
+        k *= f;
+      }
+    }
+    return { k, r };
+  }
+
+  // k√r の和。terms: Map<r, Frac>（r=1 は有理数部分）
+  class Surd {
+    constructor(terms) {
+      this.terms = terms || new Map();
+    }
+    static rat(q) {
+      const s = new Surd();
+      const f = Frac.of(q);
+      if (!f.isZero()) s.terms.set(1, f);
+      return s;
+    }
+    static sqrt(n) {
+      const { k, r } = simplifySqrt(n);
+      const s = new Surd();
+      if (k !== 0) s.terms.set(r, new Frac(k));
+      return s;
+    }
+    _put(r, c) {
+      const cur = this.terms.get(r);
+      const v = cur ? cur.add(c) : c;
+      if (v.isZero()) this.terms.delete(r);
+      else this.terms.set(r, v);
+    }
+    add(o) {
+      o = toSurd(o);
+      const s = new Surd(new Map(this.terms));
+      for (const [r, c] of o.terms) s._put(r, c);
+      return s;
+    }
+    sub(o) {
+      return this.add(toSurd(o).mul(-1));
+    }
+    mul(o) {
+      o = toSurd(o);
+      const s = new Surd();
+      for (const [r1, c1] of this.terms) {
+        for (const [r2, c2] of o.terms) {
+          const { k, r } = simplifySqrt(r1 * r2);
+          s._put(r, c1.mul(c2).mul(k));
+        }
+      }
+      return s;
+    }
+    eq(o) {
+      return this.sub(o).isZero();
+    }
+    isZero() {
+      return this.terms.size === 0;
+    }
+    isRational() {
+      for (const r of this.terms.keys()) if (r !== 1) return false;
+      return true;
+    }
+    toNumber() {
+      let v = 0;
+      for (const [r, c] of this.terms) v += c.toNumber() * Math.sqrt(r);
+      return v;
+    }
+    toString() {
+      const rs = Array.from(this.terms.keys()).sort((a, b) => a - b);
+      if (rs.length === 0) return "0";
+      return rs
+        .map((r, i) => {
+          const c = this.terms.get(r);
+          const neg = c.isNeg();
+          const ac = c.abs();
+          let body;
+          if (r === 1) body = ac.toString();
+          else {
+            const num = (ac.n === 1 ? "" : String(ac.n)) + "√" + r;
+            body = ac.d === 1 ? num : num + "/" + ac.d;
+          }
+          if (i === 0) return (neg ? "-" : "") + body;
+          return (neg ? " - " : " + ") + body;
+        })
+        .join("");
+    }
+  }
+  function toSurd(o) {
+    return o instanceof Surd ? o : Surd.rat(o);
+  }
+
+  App.math = {
+    Surd,
+    simplifySqrt,
+    Poly,
+    formatPoly,
+    formatFactors,
+    mulberry32,
+    randInt,
+    randNonZero,
+    pick,
+    shuffle,
+    gcd,
+    Frac,
+    normalizeInput,
+    parseAnswer,
+  };
+  if (typeof module !== "undefined") module.exports = App.math;
+})(typeof globalThis !== "undefined" ? globalThis : this);
+
+// ---- generators.js ----
+(function (root) {
+  "use strict";
+  const App = (root.MathApp = root.MathApp || {});
+  const M = App.math;
+  const { Frac, Poly, Surd, formatPoly, randInt, randNonZero, pick, shuffle } = M;
+
+  const UNITS = [
+    { id: "signed", grade: 1, name: "正負の数" },
+    { id: "linexpr", grade: 1, name: "文字式の計算" },
+    { id: "lineq", grade: 1, name: "一次方程式" },
+    { id: "proportion", grade: 1, name: "比例・反比例" },
+    { id: "polycalc", grade: 2, name: "式の計算" },
+    { id: "simul", grade: 2, name: "連立方程式" },
+    { id: "linfunc", grade: 2, name: "一次関数の式" },
+    { id: "expand", grade: 3, name: "式の展開" },
+    { id: "factorize", grade: 3, name: "因数分解" },
+    { id: "sqrt", grade: 3, name: "平方根" },
+    { id: "quadeq", grade: 3, name: "二次方程式" },
+  ];
+
+  // ---------- 共通ヘルパー ----------
+  function makeChoices(rng, correct, distractors, fallback) {
+    const out = [correct];
+    const seen = new Set(out);
+    for (const d of shuffle(rng, distractors)) {
+      if (out.length >= 4) break;
+      if (typeof d !== "string" || seen.has(d)) continue;
+      seen.add(d);
+      out.push(d);
+    }
+    let tries = 0;
+    while (out.length < 4) {
+      if (tries++ >= 50) throw new Error("makeChoices: 選択肢が足りない");
+      let d;
+      try {
+        d = fallback();
+      } catch (e) {
+        continue;
+      }
+      if (typeof d !== "string" || seen.has(d)) continue;
+      seen.add(d);
+      out.push(d);
+    }
+    return shuffle(rng, out);
+  }
+
+  function choiceProblem(rng, base, correct, distractors, fallback) {
+    return Object.assign({}, base, {
+      answerType: "choice",
+      answer: correct,
+      choices: makeChoices(rng, correct, distractors, fallback),
+    });
+  }
+
+  function validateProblem(p) {
+    if (!p || typeof p !== "object") return false;
+    if (typeof p.prompt !== "string" || !p.prompt) return false;
+    if (!Array.isArray(p.steps) || p.steps.length === 0) return false;
+    const strs = [p.prompt].concat(p.steps, [].concat(p.answer), p.choices || [], p.fields || []);
+    for (const s of strs) {
+      if (typeof s !== "string" || s === "") return false;
+      if (/NaN|Infinity|undefined|null|\[object/.test(s)) return false;
+    }
+    if (p.answerType === "choice") {
+      if (!Array.isArray(p.choices) || p.choices.length !== 4) return false;
+      if (new Set(p.choices).size !== 4) return false;
+      if (p.choices.filter((c) => c === p.answer).length !== 1) return false;
+    } else if (p.answerType === "number") {
+      const ans = [].concat(p.answer);
+      for (const a of ans) if (!M.parseAnswer(a)) return false;
+      if (Array.isArray(p.answer)) {
+        if (!Array.isArray(p.fields) || p.fields.length !== p.answer.length) return false;
+      }
+    } else return false;
+    return true;
+  }
+
+  // 表示用ヘルパー
+  // 負の数はかっこで包む
+  function paren(f) {
+    const s = Frac.of(f).toString();
+    return Frac.of(f).isNeg() ? "(" + s + ")" : s;
+  }
+  // 一次式 ax + b
+  function lin(a, b, v) {
+    return Poly.var(v || "x", a).add(Poly.const(b));
+  }
+  // 係数 k をかっこの前に付けた表示: 2(3x - 1), -(x + 2)
+  function kParen(k, p) {
+    k = Frac.of(k);
+    const ks = k.eq(1) ? "" : k.eq(-1) ? "-" : k.toString();
+    return ks + "(" + formatPoly(p) + ")";
+  }
+  // 方程式の片側を表示（0 も含む）
+  function side(p) {
+    return formatPoly(p);
+  }
+  // 値が大きすぎる・分母が大きすぎるものを弾く
+  function niceFrac(f, maxAbs, maxDen) {
+    return Math.abs(f.n) <= maxAbs * f.d && f.d <= maxDen;
+  }
+  function need(cond, msg) {
+    if (!cond) throw new Error("retry: " + (msg || ""));
+  }
+
+  // ========== 中1 ==========
+
+  // ---- 正負の数 ----
+  // 項: { str, js, val }
+  function numTerm(rng, max) {
+    const v = randNonZero(rng, -max, max);
+    return { str: paren(v), js: "(" + v + ")", val: new Frac(v) };
+  }
+  function signedTermL1(rng) {
+    const kind = pick(rng, ["num", "num", "mul", "div"]);
+    if (kind === "num") return numTerm(rng, 12);
+    const a = randNonZero(rng, -9, 9);
+    const b = randNonZero(rng, -9, 9);
+    if (kind === "mul") {
+      return { str: paren(a) + " × " + paren(b), js: "(" + a + ")*(" + b + ")", val: new Frac(a * b), calc: true };
+    }
+    const prod = a * b;
+    return { str: paren(prod) + " ÷ " + paren(b), js: "(" + prod + ")/(" + b + ")", val: new Frac(a), calc: true };
+  }
+  function powFactor(rng, allowLeadingMinus) {
+    const kind = allowLeadingMinus ? pick(rng, ["negpow", "minuspow", "pow"]) : pick(rng, ["negpow", "pow"]);
+    const n = pick(rng, [2, 2, 3]);
+    const a = n === 3 ? randInt(rng, 2, 3) : randInt(rng, 2, 5);
+    const sup = n === 2 ? "²" : "³";
+    if (kind === "negpow") {
+      return { str: "(-" + a + ")" + sup, js: "((-" + a + ")**" + n + ")", val: new Frac(Math.pow(-a, n)) };
+    }
+    if (kind === "minuspow") {
+      return { str: "-" + a + sup, js: "(-(" + a + "**" + n + "))", val: new Frac(-Math.pow(a, n)) };
+    }
+    return { str: a + sup, js: "(" + a + "**" + n + ")", val: new Frac(Math.pow(a, n)) };
+  }
+  function fracFactor(rng) {
+    const d = randInt(rng, 2, 6);
+    let n = randNonZero(rng, -7, 7);
+    if (M.gcd(n, d) !== 1) n = n > 0 ? 1 : -1;
+    const f = new Frac(n, d);
+    return { str: paren(f), js: "(" + n + "/" + d + ")", val: f };
+  }
+  function signedTermL2(rng, first) {
+    const kind = pick(rng, ["powmul", "powdiv", "fracmul", "fracdiv", "num"]);
+    if (kind === "num") return numTerm(rng, 12);
+    if (kind === "powmul" || kind === "powdiv") {
+      const p = powFactor(rng, first);
+      const b = randNonZero(rng, -6, 6);
+      if (kind === "powmul") {
+        return { str: p.str + " × " + paren(b), js: p.js + "*(" + b + ")", val: p.val.mul(b), calc: true };
+      }
+      return { str: p.str + " ÷ " + paren(b), js: p.js + "/(" + b + ")", val: p.val.div(b), calc: true };
+    }
+    const f = fracFactor(rng);
+    if (kind === "fracmul") {
+      const b = randNonZero(rng, -12, 12);
+      return { str: f.str + " × " + paren(b), js: f.js + "*(" + b + ")", val: f.val.mul(b), calc: true };
+    }
+    const g = fracFactor(rng);
+    return { str: f.str + " ÷ " + g.str, js: f.js + "/" + g.js, val: f.val.div(g.val), calc: true };
+  }
+
+  function genSigned(rng, level) {
+    const nTerms = level === 1 ? randInt(rng, 2, 3) : 2 + (rng() < 0.4 ? 1 : 0);
+    const terms = [];
+    for (let i = 0; i < nTerms; i++) terms.push(level === 1 ? signedTermL1(rng) : signedTermL2(rng, i === 0));
+    need(terms.some((t) => t.calc) || level === 1, "L2 は計算項を含む");
+    let str = terms[0].str,
+      js = terms[0].js,
+      val = terms[0].val;
+    const ops = [];
+    for (let i = 1; i < nTerms; i++) {
+      const op = pick(rng, ["+", "-"]);
+      ops.push(op);
+      str += " " + op + " " + terms[i].str;
+      js += op + terms[i].js;
+      val = op === "+" ? val.add(terms[i].val) : val.sub(terms[i].val);
+    }
+    need(niceFrac(val, 300, 12), "値が大きすぎる");
+    const steps = [];
+    const calcTerms = terms.filter((t) => t.calc);
+    if (calcTerms.length) {
+      steps.push("かけ算・わり算（累乗）を先に計算: " + calcTerms.map((t) => t.str + " = " + t.val.toString()).join("、"));
+    }
+    let line = paren(terms[0].val);
+    for (let i = 1; i < nTerms; i++) line += " " + ops[i - 1] + " " + paren(terms[i].val);
+    steps.push("たし算・ひき算をする: " + line + " = " + val.toString());
+    return {
+      unitId: "signed",
+      level,
+      prompt: "次の計算をしなさい。\n" + str,
+      answerType: "number",
+      answer: val.toString(),
+      steps,
+      meta: { value: val, js },
+    };
+  }
+
+  // ---- 文字式の計算 ----
+  function genLinexpr(rng, level) {
+    const r1 = () => randNonZero(rng, -9, 9);
+    const p1 = lin(r1(), r1());
+    const p2 = lin(r1(), r1());
+    let parts, prompt, wrong = [];
+    const tmpl = level === 1 ? pick(rng, ["add", "sub", "k"]) : pick(rng, ["ksub", "fracmul", "div"]);
+    if (tmpl === "add") {
+      parts = [{ k: new Frac(1), p: p1 }, { k: new Frac(1), p: p2 }];
+      prompt = "(" + formatPoly(p1) + ") + (" + formatPoly(p2) + ")";
+      wrong.push(p1.add(p2.scale(-1)));
+    } else if (tmpl === "sub") {
+      parts = [{ k: new Frac(1), p: p1 }, { k: new Frac(-1), p: p2 }];
+      prompt = "(" + formatPoly(p1) + ") - (" + formatPoly(p2) + ")";
+      // 後ろのかっこの定数項の符号を変え忘れる
+      const c2 = p2.coefOf({});
+      wrong.push(p1.sub(p2).add(Poly.const(c2.mul(2))));
+      wrong.push(p1.add(p2));
+    } else if (tmpl === "k") {
+      const k = randNonZero(rng, -6, 6);
+      need(k !== 1 && k !== -1, "k");
+      parts = [{ k: new Frac(k), p: p1 }];
+      prompt = kParen(k, p1);
+      // 定数項にかけ忘れ
+      wrong.push(Poly.var("x", p1.coefOf({ x: 1 }).mul(k)).add(Poly.const(p1.coefOf({}))));
+    } else if (tmpl === "ksub") {
+      const k = randInt(rng, 2, 5) * pick(rng, [1, -1]);
+      const m = randInt(rng, 2, 5);
+      parts = [{ k: new Frac(k), p: p1 }, { k: new Frac(-m), p: p2 }];
+      prompt = kParen(k, p1) + " - " + kParen(m, p2);
+      // 後ろの定数項の符号ミス
+      const c2 = p2.coefOf({});
+      wrong.push(p1.scale(k).sub(p2.scale(m)).add(Poly.const(c2.mul(2 * m))));
+      // 後ろの定数項にかけ忘れ
+      wrong.push(p1.scale(k).sub(Poly.var("x", p2.coefOf({ x: 1 }).mul(m))).sub(Poly.const(c2)));
+    } else if (tmpl === "fracmul") {
+      const q = randInt(rng, 2, 5);
+      let pn = randNonZero(rng, -4, 4);
+      need(M.gcd(pn, q) === 1, "既約");
+      const f = new Frac(pn, q);
+      const pp = lin(r1() * q, r1() * q);
+      const m = randNonZero(rng, -5, 5);
+      parts = [{ k: f, p: pp }, { k: new Frac(m), p: p2 }];
+      prompt = kParen(f, pp) + (m > 0 ? " + " : " - ") + kParen(Math.abs(m), p2);
+      wrong.push(pp.scale(f).add(Poly.var("x", p2.coefOf({ x: 1 }).mul(m))).add(Poly.const(p2.coefOf({}))));
+      wrong.push(pp.scale(f.neg()).add(p2.scale(m)));
+    } else {
+      // (ax + b) ÷ k  （a, b は k の倍数）
+      const k = randNonZero(rng, -5, 5);
+      need(Math.abs(k) >= 2, "k");
+      const pp = lin(r1() * k, r1() * k);
+      const m = randNonZero(rng, -5, 5);
+      parts = [{ k: new Frac(1, k), p: pp }, { k: new Frac(m), p: p2 }];
+      prompt = "(" + formatPoly(pp) + ") ÷ " + paren(k) + (m > 0 ? " + " : " - ") + kParen(Math.abs(m), p2);
+      wrong.push(pp.scale(new Frac(-1, k)).add(p2.scale(m)));
+      wrong.push(Poly.var("x", pp.coefOf({ x: 1 }).div(k)).add(Poly.const(pp.coefOf({}))).add(p2.scale(m)));
+    }
+    let result = Poly.const(0);
+    for (const pt of parts) result = result.add(pt.p.scale(pt.k));
+    need(!result.isZero(), "結果が0");
+    const correct = formatPoly(result);
+    // 一般的な誤り: 定数項の符号、x の係数のずれ
+    wrong.push(Poly.var("x", result.coefOf({ x: 1 })).sub(Poly.const(result.coefOf({}))));
+    wrong.push(result.add(Poly.var("x", pick(rng, [1, -1]))));
+    const expanded = parts.map((pt) => formatPoly(pt.p.scale(pt.k)));
+    const steps = [
+      "かっこをはずす: " + expanded.map((s, i) => (i === 0 ? s : "+ (" + s + ")")).join(" "),
+      "同類項（x の項どうし、数の項どうし）をまとめる: " + correct,
+    ];
+    return choiceProblem(
+      rng,
+      { unitId: "linexpr", level, prompt: "次の計算をしなさい。\n" + prompt, steps, meta: { parts, result } },
+      correct,
+      wrong.filter((w) => !w.isZero()).map(formatPoly),
+      () => formatPoly(result.add(Poly.const(randNonZero(rng, -3, 3))))
+    );
+  }
+
+  // ---- 一次方程式 ----
+  function eqSteps(lhs, rhs, extraFirst, mult) {
+    // mult: 分母をはらうためにかけた数（手順を整数係数で示す）
+    const diff = lhs.sub(rhs).scale(mult || 1);
+    const A = diff.coefOf({ x: 1 });
+    const C = diff.coefOf({});
+    const x = C.neg().div(A);
+    const steps = extraFirst ? [extraFirst] : [];
+    steps.push("x の項を左辺に、数の項を右辺に移項して整理: " + formatPoly(Poly.var("x", A)) + " = " + C.neg().toString());
+    steps.push("両辺を " + paren(A) + " でわる: x = " + x.toString());
+    return { x, steps };
+  }
+  function genLineq(rng, level) {
+    let lhs, rhs, prompt, extra, mult;
+    if (level === 1) {
+      const x0 = randInt(rng, -9, 9);
+      const a = randNonZero(rng, -9, 9);
+      const c = randInt(rng, -9, 9);
+      need(a !== c, "a≠c");
+      const b = randInt(rng, -12, 12);
+      const d = a * x0 + b - c * x0;
+      need(Math.abs(d) <= 40, "d");
+      lhs = lin(a, b);
+      rhs = lin(c, d);
+      prompt = side(lhs) + " = " + side(rhs);
+    } else if (rng() < 0.5) {
+      // k(x + p) = m(x + q) + r
+      const k = randNonZero(rng, -5, 5);
+      const m = randNonZero(rng, -5, 5);
+      need(k !== m, "k≠m");
+      const p = randNonZero(rng, -6, 6);
+      const q = randNonZero(rng, -6, 6);
+      const r = randInt(rng, -9, 9);
+      lhs = lin(1, p).scale(k);
+      rhs = lin(1, q).scale(m).add(Poly.const(r));
+      prompt = kParen(k, lin(1, p)) + " = " + kParen(m, lin(1, q)) + (r === 0 ? "" : (r > 0 ? " + " : " - ") + Math.abs(r));
+      extra = "かっこをはずす: " + side(lhs) + " = " + side(rhs);
+    } else {
+      // (ax + b)/p = (cx + d)/q
+      const pp = randInt(rng, 2, 6);
+      const qq = randInt(rng, 2, 6);
+      need(pp !== qq, "p≠q");
+      const a = randNonZero(rng, -5, 5),
+        b = randNonZero(rng, -9, 9),
+        c = randNonZero(rng, -5, 5),
+        d = randNonZero(rng, -9, 9);
+      lhs = lin(a, b).scale(new Frac(1, pp));
+      rhs = lin(c, d).scale(new Frac(1, qq));
+      prompt = "(" + formatPoly(lin(a, b)) + ")/" + pp + " = (" + formatPoly(lin(c, d)) + ")/" + qq;
+      const L = (pp * qq) / M.gcd(pp, qq);
+      mult = L;
+      extra =
+        "両辺に " + L + " をかけて分母をはらう: " + kParen(L / pp, lin(a, b)) + " = " + kParen(L / qq, lin(c, d));
+    }
+    const diffA = lhs.sub(rhs).coefOf({ x: 1 });
+    need(!diffA.isZero(), "x の係数が0");
+    const { x, steps } = eqSteps(lhs, rhs, extra, mult);
+    need(niceFrac(x, 50, 9), "解");
+    return {
+      unitId: "lineq",
+      level,
+      prompt: "次の方程式を解きなさい。\n" + prompt,
+      answerType: "number",
+      answer: x.toString(),
+      fields: undefined,
+      steps,
+      meta: { lhs, rhs },
+    };
+  }
+
+  // ---- 比例・反比例 ----
+  function propAnswer(kind, k) {
+    return kind === "direct" ? "y = " + formatPoly(Poly.var("x", k)) : "y = " + k.toString() + "/x";
+  }
+  function genProportion(rng, level) {
+    const kind = pick(rng, ["direct", "inverse"]);
+    let k, px, py;
+    if (kind === "direct") {
+      if (level === 1) {
+        k = new Frac(randNonZero(rng, -8, 8));
+        px = new Frac(randNonZero(rng, -6, 6));
+      } else {
+        const d = randInt(rng, 2, 5);
+        let n = randNonZero(rng, -7, 7);
+        need(M.gcd(n, d) === 1, "既約");
+        k = new Frac(n, d);
+        px = new Frac(d * randNonZero(rng, -3, 3));
+      }
+      py = k.mul(px);
+    } else {
+      px = new Frac(randNonZero(rng, -6, 6));
+      py = new Frac(randNonZero(rng, -8, 8));
+      if (level === 2) {
+        // 分数の値を与える: x = p, y = q/r → k = p*q/r が整数になるもの
+        const r = randInt(rng, 2, 4);
+        px = new Frac(r * randNonZero(rng, -3, 3));
+        py = new Frac(randNonZero(rng, -7, 7), r);
+      }
+      k = px.mul(py);
+      need(k.isInt() && !k.isZero(), "k は整数");
+    }
+    need(!(kind === "direct" && k.abs().eq(1) && level === 2), "L2 で k=±1 は避ける");
+    const kindName = kind === "direct" ? "比例" : "反比例";
+    const prompt =
+      "y は x に" + kindName + "し、x = " + px.toString() + " のとき y = " + py.toString() + " です。\ny を x の式で表しなさい。";
+    const correct = propAnswer(kind, k);
+    const other = kind === "direct" ? "inverse" : "direct";
+    const wrongs = [];
+    if (k.isInt()) wrongs.push(propAnswer(other, k));
+    wrongs.push(propAnswer(kind, k.neg()));
+    if (kind === "direct") {
+      wrongs.push(propAnswer("direct", new Frac(1).div(k)));
+      wrongs.push(propAnswer("direct", px.div(py)));
+    } else {
+      // y = x/k 型の誤り → 比例で 1/k
+      wrongs.push(propAnswer("direct", new Frac(1).div(k)));
+      wrongs.push(propAnswer("inverse", py.div(px).isInt() ? py.div(px) : k.add(1)));
+    }
+    const steps =
+      kind === "direct"
+        ? [
+            "比例の式は y = ax とおける",
+            "x = " + px.toString() + "、y = " + py.toString() + " を代入: " + py.toString() + " = a × " + paren(px),
+            "a = " + k.toString() + " なので " + correct,
+          ]
+        : [
+            "反比例の式は y = a/x とおける（a = xy）",
+            "a = " + paren(px) + " × " + paren(py) + " = " + k.toString(),
+            "よって " + correct,
+          ];
+    return choiceProblem(
+      rng,
+      { unitId: "proportion", level, prompt, steps, meta: { kind, k, point: [px, py] } },
+      correct,
+      wrongs,
+      () => propAnswer(kind, k.add(randNonZero(rng, -3, 3)))
+    );
+  }
+
+  // ========== 中2 ==========
+
+  // 先頭以外に続ける多項式: " + 3y" / " - 3y"
+  function plusPoly(p) {
+    const s = formatPoly(p);
+    return s[0] === "-" ? " - " + s.slice(1) : " + " + s;
+  }
+  function monoParen(p) {
+    const s = formatPoly(p);
+    return s[0] === "-" ? "(" + s + ")" : s;
+  }
+  function randMono(rng, vars, maxCoef, maxDeg) {
+    const v = {};
+    for (const name of vars) if (rng() < 0.7) v[name] = randInt(rng, 1, maxDeg);
+    if (Object.keys(v).length === 0) v[vars[0]] = 1;
+    return Poly.term(randNonZero(rng, -maxCoef, maxCoef), v);
+  }
+  function monoParts(p) {
+    const t = Array.from(p.terms.values())[0];
+    return { coef: t.coef, vars: t.vars };
+  }
+  // 単項式の典型的な誤り
+  function monoMistakes(rng, result, coefWrong) {
+    const { coef, vars } = monoParts(result);
+    const out = [result.scale(-1)];
+    const names = Object.keys(vars);
+    const n = pick(rng, names);
+    const v2 = Object.assign({}, vars);
+    v2[n] = vars[n] + 1;
+    out.push(Poly.term(coef, v2));
+    if (vars[n] > 1) {
+      const v3 = Object.assign({}, vars);
+      v3[n] = vars[n] - 1;
+      out.push(Poly.term(coef, v3));
+    }
+    if (coefWrong && !coefWrong.eq(coef) && !coefWrong.isZero()) out.push(Poly.term(coefWrong, vars));
+    return out;
+  }
+  function lcm(a, b) {
+    return Math.abs(a * b) / M.gcd(a, b);
+  }
+  // 分母をそろえて (ax + by)/L の形にする（整数係数ならそのまま）
+  function formatOverDen(p) {
+    let L = 1;
+    for (const t of p.terms.values()) L = lcm(L, t.coef.d);
+    if (L === 1) return formatPoly(p);
+    return "(" + formatPoly(p.scale(L)) + ")/" + L;
+  }
+
+  // ---- 式の計算 ----
+  function genPolycalc(rng, level) {
+    const vs = pick(rng, [["x", "y"], ["a", "b"]]);
+    const [u, v] = vs;
+    const r = () => randNonZero(rng, -9, 9);
+    const two = () => Poly.var(u, r()).add(Poly.var(v, r()));
+    const tmpl = level === 1 ? pick(rng, ["addsub", "monomul", "monodiv"]) : pick(rng, ["ksub", "frac", "three"]);
+    let prompt, result, meta, wrong = [], fmt = formatPoly, steps;
+    if (tmpl === "addsub" || tmpl === "ksub") {
+      const p1 = two(),
+        p2 = two();
+      const k = tmpl === "addsub" ? 1 : randInt(rng, 2, 5) * pick(rng, [1, -1]);
+      const m = tmpl === "addsub" ? pick(rng, [1, -1]) : -randInt(rng, 2, 5);
+      result = p1.scale(k).add(p2.scale(m));
+      if (tmpl === "addsub") prompt = "(" + formatPoly(p1) + ") " + (m > 0 ? "+" : "-") + " (" + formatPoly(p2) + ")";
+      else prompt = kParen(k, p1) + " - " + kParen(-m, p2);
+      // 後ろのかっこの2つ目の項の符号を変え忘れる
+      const t2 = Poly.var(v, p2.coefOf(((o) => ((o[v] = 1), o))({})));
+      if (m < 0) wrong.push(result.add(t2.scale(-2 * m)));
+      wrong.push(p1.scale(k).sub(p2.scale(m)));
+      wrong.push(result.add(Poly.var(u, pick(rng, [1, -1]))));
+      meta = { parts: [{ k: new Frac(k), p: p1 }, { k: new Frac(m), p: p2 }], result };
+      steps = [
+        "かっこをはずす: " + formatPoly(p1.scale(k)) + plusPoly(p2.scale(m)),
+        "同類項をまとめる: " + formatPoly(result),
+      ];
+    } else if (tmpl === "monomul") {
+      const a = randMono(rng, vs, 6, 2),
+        b = randMono(rng, vs, 6, 2);
+      result = a.mul(b);
+      prompt = formatPoly(a) + " × " + monoParen(b);
+      wrong = monoMistakes(rng, result, monoParts(a).coef.add(monoParts(b).coef));
+      meta = { num: [a, b], den: [], result };
+      steps = ["係数どうし、文字どうしをかける（同じ文字は指数をたす）", formatPoly(result)];
+    } else if (tmpl === "monodiv") {
+      const q = randMono(rng, vs, 6, 2),
+        d = randMono(rng, vs, 5, 1);
+      need(!monoParts(d).coef.abs().eq(1) || rng() < 0.3, "除数の係数");
+      const n = q.mul(d);
+      result = q;
+      prompt = formatPoly(n) + " ÷ " + monoParen(d);
+      wrong = monoMistakes(rng, result, monoParts(n).coef.sub(monoParts(d).coef));
+      meta = { num: [n], den: [d], result };
+      steps = [
+        "分数の形にする: " + formatPoly(n) + " / " + monoParen(d),
+        "係数どうし、文字どうしで約分する: " + formatPoly(result),
+      ];
+    } else if (tmpl === "frac") {
+      const P = randInt(rng, 2, 4),
+        Q = randInt(rng, 2, 5);
+      need(P !== Q, "P≠Q");
+      const p1 = Poly.var(u, randNonZero(rng, -4, 4)).add(Poly.var(v, randNonZero(rng, -4, 4)));
+      const p2 = Poly.var(u, randNonZero(rng, -4, 4)).add(Poly.var(v, randNonZero(rng, -4, 4)));
+      const sg = pick(rng, [1, -1]);
+      result = p1.scale(new Frac(1, P)).add(p2.scale(new Frac(sg, Q)));
+      need(!result.isZero() && result.terms.size === 2, "2項残す");
+      prompt = "(" + formatPoly(p1) + ")/" + P + (sg > 0 ? " + " : " - ") + "(" + formatPoly(p2) + ")/" + Q;
+      fmt = formatOverDen;
+      const L = lcm(P, Q);
+      // 後ろの分子の2つ目の項の符号ミス
+      const wrongNum = p1.scale(L / P).add(p2.scale((sg * L) / Q));
+      const t2 = Poly.var(v, p2.coefOf(((o) => ((o[v] = 1), o))({})));
+      if (sg < 0) wrong.push(wrongNum.add(t2.scale((2 * L) / Q)).scale(new Frac(1, L)));
+      // 分母をはらってしまう誤り（分子だけ）
+      wrong.push(result.scale(L));
+      wrong.push(p1.scale(new Frac(1, P)).sub(p2.scale(new Frac(sg, Q))));
+      meta = { parts: [{ k: new Frac(1, P), p: p1 }, { k: new Frac(sg, Q), p: p2 }], result, answerFmt: "overden" };
+      steps = [
+        "分母を " + L + " にそろえる: (" + formatPoly(p1.scale(L / P)) + ")/" + L + (sg > 0 ? " + " : " - ") +
+          "(" + formatPoly(p2.scale(L / Q)) + ")/" + L,
+        "分子を計算する: " + formatOverDen(result),
+      ];
+    } else {
+      // a ÷ b × c
+      const q = randMono(rng, vs, 4, 1),
+        d = randMono(rng, vs, 4, 1),
+        c = randMono(rng, vs, 3, 2);
+      const n = q.mul(d);
+      result = q.mul(c);
+      need(result.degree() <= 5, "次数");
+      prompt = formatPoly(n) + " ÷ " + monoParen(d) + " × " + monoParen(c);
+      wrong = monoMistakes(rng, result);
+      // 先に d × c を計算してからわってしまう誤り（係数を c² でわったもの）
+      const cc = monoParts(c).coef;
+      if (!cc.abs().eq(1)) wrong.push(result.scale(new Frac(1).div(cc.mul(cc))));
+      meta = { num: [n, c], den: [d], result };
+      steps = [
+        "わり算は逆数のかけ算にする: " + formatPoly(n) + " × 1/" + monoParen(d) + " × " + monoParen(c),
+        "係数どうし、文字どうしで計算する: " + formatPoly(result),
+      ];
+    }
+    need(!result.isZero(), "0");
+    const correct = fmt(result);
+    return choiceProblem(
+      rng,
+      { unitId: "polycalc", level, prompt: "次の計算をしなさい。\n" + prompt, steps, meta },
+      correct,
+      wrong.filter((w) => !w.isZero()).map(fmt),
+      () => fmt(result.add(Poly.term(randNonZero(rng, -3, 3), monoParts(result).vars)))
+    );
+  }
+
+  // ---- 連立方程式 ----
+  function genSimul(rng, level) {
+    const tmpl = level === 1 ? "basic" : pick(rng, ["general", "paren", "frac"]);
+    const P = randInt(rng, 2, 4),
+      Q = randInt(rng, 2, 4);
+    const x0 = tmpl === "frac" ? P * randInt(rng, -2, 2) : randInt(rng, -6, 6),
+      y0 = tmpl === "frac" ? Q * randInt(rng, -2, 2) : randInt(rng, -6, 6);
+    const X = Poly.var("x"),
+      Y = Poly.var("y");
+    const env = { x: x0, y: y0 };
+    let eqs, lines;
+    const r = (m) => randNonZero(rng, -m, m);
+    if (level === 1) {
+      const a1 = r(5),
+        b1 = r(5);
+      let a2, b2;
+      if (rng() < 0.5) {
+        a2 = r(5);
+        b2 = pick(rng, [b1, -b1]);
+      } else {
+        a2 = pick(rng, [a1, -a1]);
+        b2 = r(5);
+      }
+      const l1 = X.scale(a1).add(Y.scale(b1)),
+        l2 = X.scale(a2).add(Y.scale(b2));
+      eqs = [
+        { lhs: l1, rhs: Poly.const(l1.evaluate(env)) },
+        { lhs: l2, rhs: Poly.const(l2.evaluate(env)) },
+      ];
+      lines = eqs.map((e) => formatPoly(e.lhs) + " = " + formatPoly(e.rhs));
+    } else {
+      const a2 = r(6),
+        b2 = r(6);
+      const l2 = X.scale(a2).add(Y.scale(b2));
+      const e2 = { lhs: l2, rhs: Poly.const(l2.evaluate(env)) };
+      let e1, line1;
+      if (tmpl === "general") {
+        const a1 = r(6),
+          b1 = r(6);
+        need(Math.abs(a1) !== Math.abs(a2) && Math.abs(b1) !== Math.abs(b2), "倍数関係なし");
+        need(a2 % a1 !== 0 && a1 % a2 !== 0, "倍数関係なし");
+        const l1 = X.scale(a1).add(Y.scale(b1));
+        e1 = { lhs: l1, rhs: Poly.const(l1.evaluate(env)) };
+        line1 = formatPoly(e1.lhs) + " = " + formatPoly(e1.rhs);
+      } else if (tmpl === "paren") {
+        const k = randInt(rng, 2, 4),
+          pc = r(4),
+          q = r(5);
+        const inner = X.add(Y.scale(pc));
+        const l1 = inner.scale(k).add(Y.scale(q));
+        need(!l1.coefOf({ y: 1 }).isZero(), "y が消える");
+        e1 = { lhs: l1, rhs: Poly.const(l1.evaluate(env)) };
+        line1 = kParen(k, inner) + plusPoly(Y.scale(q)) + " = " + formatPoly(e1.rhs);
+      } else {
+        const sg = pick(rng, [1, -1]);
+        const l1 = X.scale(new Frac(1, P)).add(Y.scale(new Frac(sg, Q)));
+        e1 = { lhs: l1, rhs: Poly.const(l1.evaluate(env)) };
+        line1 = "x/" + P + (sg > 0 ? " + " : " - ") + "y/" + Q + " = " + formatPoly(e1.rhs);
+      }
+      eqs = rng() < 0.5 ? [e1, e2] : [e2, e1];
+      lines = eqs.map((e) => (e === e1 ? line1 : formatPoly(e.lhs) + " = " + formatPoly(e.rhs)));
+    }
+    // 整理した係数（整数化）
+    const norm = eqs.map((e) => {
+      let d = e.lhs.sub(e.rhs);
+      let L = 1;
+      for (const t of d.terms.values()) L = lcm(L, t.coef.d);
+      d = d.scale(L);
+      return { a: d.coefOf({ x: 1 }), b: d.coefOf({ y: 1 }), c: d.coefOf({}).neg() };
+    });
+    const det = norm[0].a.mul(norm[1].b).sub(norm[0].b.mul(norm[1].a));
+    need(!det.isZero(), "解が一意でない");
+    const steps = [];
+    const show = (n) => formatPoly(X.scale(n.a).add(Y.scale(n.b))) + " = " + n.c.toString();
+    if (level === 2) steps.push("式を整理する: " + show(norm[0]) + "、" + show(norm[1]));
+    const A1 = norm[0].a.n,
+      A2 = norm[1].a.n;
+    const L = lcm(A1, A2);
+    const m1 = L / Math.abs(A1),
+      m2 = L / Math.abs(A2);
+    const same = A1 * A2 > 0;
+    const sg = same ? -1 : 1;
+    const K = norm[0].b.mul(m1).add(norm[1].b.mul(m2 * sg));
+    const R = norm[0].c.mul(m1).add(norm[1].c.mul(m2 * sg));
+    const mulTxt = (m) => (m === 1 ? "そのまま" : m + " 倍");
+    steps.push(
+      "x を消去する: 上の式を" + mulTxt(m1) + "、下の式を" + mulTxt(m2) + "して" + (same ? "ひく" : "たす") + "と " +
+        formatPoly(Y.scale(K)) + " = " + R.toString()
+    );
+    steps.push("y = " + y0 + " を代入して x = " + x0);
+    return {
+      unitId: "simul",
+      level,
+      prompt: "次の連立方程式を解きなさい。\n" + lines.join("\n"),
+      answerType: "number",
+      answer: [String(x0), String(y0)],
+      fields: ["x", "y"],
+      steps,
+      meta: { eqs },
+    };
+  }
+
+  // ---- 一次関数の式 ----
+  function lineStr(a, b) {
+    return "y = " + formatPoly(Poly.var("x", a).add(Poly.const(b)));
+  }
+  function pt(x, y) {
+    return "(" + x.toString() + ", " + y.toString() + ")";
+  }
+  function genLinfunc(rng, level) {
+    let a, b, points, prompt, steps;
+    if (level === 1) {
+      a = new Frac(randNonZero(rng, -5, 5));
+      b = new Frac(randInt(rng, -9, 9));
+      const px = new Frac(randNonZero(rng, -4, 4));
+      const py = a.mul(px).add(b);
+      points = [[px, py], [px.add(1), py.add(a)]];
+      if (rng() < 0.6) {
+        prompt = "傾きが " + a.toString() + " で、点 " + pt(px, py) + " を通る直線の式を求めなさい。";
+        steps = [
+          "y = " + formatPoly(Poly.var("x", a)) + " + b に " + pt(px, py) + " を代入: " + py.toString() + " = " + a.toString() + " × " + paren(px) + " + b",
+          "b = " + b.toString() + " より " + lineStr(a, b),
+        ];
+      } else {
+        prompt = "切片が " + b.toString() + " で、点 " + pt(px, py) + " を通る直線の式を求めなさい。";
+        steps = [
+          "y = ax " + (b.isNeg() ? "- " + b.abs().toString() : "+ " + b.toString()) + " に " + pt(px, py) + " を代入",
+          py.toString() + " = " + paren(px) + "a + " + paren(b) + " より a = " + a.toString(),
+          lineStr(a, b),
+        ];
+      }
+    } else {
+      const d = pick(rng, [1, 2, 3]);
+      let n = randNonZero(rng, -6, 6);
+      need(M.gcd(n, d) === 1, "既約");
+      a = new Frac(n, d);
+      b = new Frac(randInt(rng, -9, 9));
+      const x1 = new Frac(d * randInt(rng, -3, 3));
+      const x2 = new Frac(d * randInt(rng, -3, 3));
+      need(!x1.eq(x2), "x1≠x2");
+      const y1 = a.mul(x1).add(b),
+        y2 = a.mul(x2).add(b);
+      points = [[x1, y1], [x2, y2]];
+      prompt = "2点 " + pt(x1, y1) + "、" + pt(x2, y2) + " を通る直線の式を求めなさい。";
+      steps = [
+        "傾き = (" + y2.toString() + " - " + paren(y1) + ") ÷ (" + x2.toString() + " - " + paren(x1) + ") = " + a.toString(),
+        y1.toString() + " = " + a.toString() + " × " + paren(x1) + " + b より b = " + b.toString(),
+        lineStr(a, b),
+      ];
+    }
+    const [[x1, y1]] = points;
+    const wrongs = [lineStr(a, b.neg()), lineStr(a.neg(), b), lineStr(a, y1.add(a.mul(x1)))];
+    if (!b.isZero()) wrongs.push(lineStr(b, a));
+    wrongs.push(lineStr(new Frac(1).div(a), b));
+    return choiceProblem(
+      rng,
+      { unitId: "linfunc", level, prompt, steps, meta: { a, b, points } },
+      lineStr(a, b),
+      wrongs,
+      () => lineStr(a, b.add(randNonZero(rng, -3, 3)))
+    );
+  }
+
+  // ========== 中3 ==========
+  const { formatFactors } = M;
+
+  // ---- 式の展開 ----
+  function genExpand(rng, level) {
+    const X = Poly.var("x"),
+      Yv = Poly.var("y");
+    const r = (m) => randNonZero(rng, -m, m);
+    let parts, prompt, wrong = [];
+    const show = (fs) => fs.map((f) => "(" + formatPoly(f) + ")").join("");
+    const showSq = (f) => "(" + formatPoly(f) + ")²";
+    if (level === 1) {
+      const t = pick(rng, ["ab", "sq", "sqm", "pm"]);
+      const a = Math.abs(r(9)),
+        b = r(9);
+      let fs;
+      if (t === "ab") {
+        const b2 = r(9);
+        need(b !== b2, "同じ");
+        fs = [X.add(Poly.const(b)), X.add(Poly.const(b2))];
+        prompt = show(fs);
+        wrong.push(X.pow(2).add(Poly.const(b * b2)));
+        wrong.push(X.pow(2).add(X.scale(b * b2)).add(Poly.const(b + b2)));
+      } else if (t === "sq" || t === "sqm") {
+        const v = t === "sq" ? a : -a;
+        fs = [X.add(Poly.const(v)), X.add(Poly.const(v))];
+        prompt = showSq(fs[0]);
+        wrong.push(X.pow(2).add(Poly.const(v * v)));
+        wrong.push(X.pow(2).add(X.scale(v)).add(Poly.const(v * v)));
+        wrong.push(X.pow(2).add(X.scale(2 * v)).add(Poly.const(2 * v)));
+      } else {
+        fs = [X.add(Poly.const(a)), X.sub(Poly.const(a))];
+        prompt = show(fs);
+        wrong.push(X.pow(2).add(Poly.const(a * a)));
+        wrong.push(X.pow(2).sub(X.scale(2 * a)).sub(Poly.const(a * a)));
+      }
+      parts = [{ k: 1, factors: fs }];
+    } else {
+      const t = pick(rng, ["sq2", "pm2", "combo"]);
+      if (t === "sq2") {
+        const p = Math.abs(r(4)),
+          q = r(5);
+        need(p !== 1 || Math.abs(q) !== 1, "簡単すぎ");
+        const f = X.scale(p).add(Yv.scale(q));
+        parts = [{ k: 1, factors: [f, f] }];
+        prompt = showSq(f);
+        wrong.push(X.scale(p).pow(2).add(Yv.scale(q).pow(2)));
+        wrong.push(X.scale(p).pow(2).add(X.mul(Yv).scale(p * q)).add(Yv.scale(q).pow(2)));
+        wrong.push(X.scale(p * p).mul(X).add(X.mul(Yv).scale(2 * p * q)).add(Yv.mul(Yv).scale(q)));
+      } else if (t === "pm2") {
+        const p = Math.abs(r(5)),
+          q = Math.abs(r(9));
+        need(p !== 1, "簡単すぎ");
+        const fs = [X.scale(p).add(Poly.const(q)), X.scale(p).sub(Poly.const(q))];
+        parts = [{ k: 1, factors: fs }];
+        prompt = show(fs);
+        wrong.push(X.pow(2).scale(p).sub(Poly.const(q * q)));
+        wrong.push(X.pow(2).scale(p * p).add(Poly.const(q * q)));
+        wrong.push(X.pow(2).scale(p * p).sub(Poly.const(q)));
+      } else {
+        // (x + a)(x + b) - (x + c)²  または  (x + a)(x - a) + (x + c)(x + d) など
+        const a = r(6),
+          b = r(6),
+          cc = r(6);
+        const f1 = [X.add(Poly.const(a)), X.add(Poly.const(b))];
+        const f2 = [X.add(Poly.const(cc)), X.add(Poly.const(cc))];
+        const sg = pick(rng, [1, -1]);
+        parts = [{ k: 1, factors: f1 }, { k: sg, factors: f2 }];
+        prompt = show(f1) + (sg > 0 ? " + " : " - ") + showSq(f2[0]);
+        const p1 = f1[0].mul(f1[1]),
+          p2 = f2[0].mul(f2[1]);
+        // 後ろのかっこの符号を一部しか変えない誤り
+        if (sg < 0) wrong.push(p1.sub(X.pow(2)).add(X.scale(2 * cc)).add(Poly.const(cc * cc)));
+        wrong.push(p1.add(p2.scale(-sg)));
+        wrong.push(p1.add(X.pow(2).add(Poly.const(cc * cc)).scale(sg)));
+      }
+    }
+    let result = Poly.const(0);
+    for (const pt of parts) {
+      let pr = Poly.const(pt.k);
+      for (const f of pt.factors) pr = pr.mul(f);
+      result = result.add(pr);
+    }
+    need(!result.isZero(), "0");
+    const steps =
+      parts.length === 1
+        ? ["乗法公式を使って展開する", "= " + formatPoly(result)]
+        : [
+            "それぞれ展開する: " +
+              parts
+                .map((pt) => {
+                  let pr = Poly.const(1);
+                  for (const f of pt.factors) pr = pr.mul(f);
+                  return (pt.k < 0 ? "-(" : "(") + formatPoly(pr) + ")";
+                })
+                .join(" "),
+            "かっこをはずして同類項をまとめる: " + formatPoly(result),
+          ];
+    return choiceProblem(
+      rng,
+      { unitId: "expand", level, prompt: "次の式を展開しなさい。\n" + prompt, steps, meta: { parts } },
+      formatPoly(result),
+      wrong.filter((w) => !w.isZero() && !w.eq(result)).map(formatPoly),
+      () => formatPoly(result.add(X.scale(randNonZero(rng, -2, 2))))
+    );
+  }
+
+  // ---- 因数分解 ----
+  function genFactorize(rng, level) {
+    const X = Poly.var("x"),
+      Yv = Poly.var("y");
+    const C = (n) => Poly.const(n);
+    const r = (m) => randNonZero(rng, -m, m);
+    let factors, coef = 1, cands = [], hint;
+    const t = level === 1 ? pick(rng, ["tri", "tri", "diffsq", "square", "common"]) : pick(rng, ["ktri", "ax2", "two", "kdiff"]);
+    if (t === "tri") {
+      const p = r(9),
+        q = r(9);
+      need(p + q !== 0, "差の平方は別");
+      factors = [X.add(C(p)), X.add(C(q))];
+      hint = "たして " + (p + q) + "、かけて " + p * q + " になる2数は " + p + " と " + q;
+      cands.push({ factors: [X.sub(C(p)), X.sub(C(q))] });
+      cands.push({ factors: [X.add(C(-p)), X.add(C(q))] });
+      cands.push({ factors: [X.add(C(p)), X.add(C(-q))] });
+      cands.push({ factors: [X.add(C(1)), X.add(C(p * q))] });
+      cands.push({ factors: [X.add(C(-1)), X.add(C(-p * q))] });
+    } else if (t === "diffsq") {
+      const a = randInt(rng, 1, 3),
+        b = randInt(rng, 1, 9);
+      need(M.gcd(a, b) === 1, "共通因数なし");
+      const P = X.scale(a);
+      factors = [P.add(C(b)), P.sub(C(b))];
+      hint = "a² - b² = (a + b)(a - b) を使う";
+      cands.push({ factors: [P.sub(C(b)), P.sub(C(b))] });
+      cands.push({ factors: [P.add(C(b)), P.add(C(b))] });
+      cands.push({ factors: [X.add(C(b)), X.sub(C(b))] });
+      cands.push({ factors: [P.add(C(b * b)), P.sub(C(1))] });
+    } else if (t === "square") {
+      const a = r(9);
+      factors = [X.add(C(a)), X.add(C(a))];
+      hint = "a² ± 2ab + b² = (a ± b)² を使う";
+      cands.push({ factors: [X.sub(C(a)), X.sub(C(a))] });
+      cands.push({ factors: [X.add(C(a)), X.sub(C(a))] });
+      cands.push({ factors: [X.add(C(2 * a)), X.add(C(2 * a))] });
+      cands.push({ factors: [X.add(C(1)), X.add(C(a * a))] });
+    } else if (t === "common") {
+      const k = randInt(rng, 2, 6),
+        a = r(9);
+      factors = [X, X.add(C(a))];
+      coef = k;
+      hint = "共通因数 " + formatPoly(X.scale(k)) + " をくくり出す";
+      cands.push({ factors: [X.sub(C(a))], coef: k, mono: true });
+      cands.push({ factors: [X, X.add(C(a * k))], coef: 1 });
+      cands.push({ factors: [X, X.add(C(a))], coef: 1 });
+      cands.push({ factors: [X, X.sub(C(a))], coef: k });
+    } else if (t === "ktri") {
+      const k = randInt(rng, 2, 4) * pick(rng, [1, 1, -1]);
+      const p = r(6),
+        q = r(6);
+      need(p + q !== 0 && p !== q, "形");
+      factors = [X.add(C(p)), X.add(C(q))];
+      coef = k;
+      hint = "共通因数 " + k + " をくくり出してから、たして " + (p + q) + "、かけて " + p * q + " になる2数を探す";
+      cands.push({ factors: [X.add(C(p)), X.add(C(q))], coef: 1 });
+      cands.push({ factors: [X.sub(C(p)), X.sub(C(q))], coef: k });
+      cands.push({ factors: [X.add(C(-p)), X.add(C(q))], coef: k });
+      cands.push({ factors: [X.add(C(p)), X.add(C(q))], coef: -k });
+    } else if (t === "ax2") {
+      const a = randInt(rng, 2, 3);
+      const p = r(7),
+        q = r(5);
+      need(M.gcd(a, Math.abs(p)) === 1, "共通因数なし");
+      factors = [X.scale(a).add(C(p)), X.add(C(q))];
+      hint = "(" + a + "x + □)(x + △) の形で、□ と △ の組を探す";
+      cands.push({ factors: [X.scale(a).add(C(q)), X.add(C(p))] });
+      cands.push({ factors: [X.scale(a).sub(C(p)), X.sub(C(q))] });
+      cands.push({ factors: [X.scale(a).add(C(p)), X.sub(C(q))] });
+      cands.push({ factors: [X.scale(a).sub(C(p)), X.add(C(q))] });
+    } else if (t === "two") {
+      // 2変数: (ax + by)(ax - by) または (ax + by)²
+      const a = randInt(rng, 1, 3),
+        b = randInt(rng, 1, 5);
+      need(M.gcd(a, b) === 1 && !(a === 1 && b === 1), "形");
+      const P = X.scale(a),
+        Q = Yv.scale(b * pick(rng, [1, -1]));
+      if (rng() < 0.5) {
+        factors = [P.add(Q), P.sub(Q)];
+        hint = "a² - b² = (a + b)(a - b) を使う";
+        cands.push({ factors: [P.add(Q), P.add(Q)] });
+        cands.push({ factors: [P.sub(Q), P.sub(Q)] });
+        cands.push({ factors: [X.add(Yv.scale(b)), X.sub(Yv.scale(b))], coef: 1 });
+      } else {
+        factors = [P.add(Q), P.add(Q)];
+        hint = "a² ± 2ab + b² = (a ± b)² を使う";
+        cands.push({ factors: [P.sub(Q), P.sub(Q)] });
+        cands.push({ factors: [P.add(Q), P.sub(Q)] });
+        cands.push({ factors: [P.add(Q.scale(2)), P.add(Q.scale(2))] });
+      }
+    } else {
+      // k(x + a)(x - a)
+      const k = randInt(rng, 2, 5),
+        a = randInt(rng, 1, 6);
+      factors = [X.add(C(a)), X.sub(C(a))];
+      coef = k;
+      hint = "共通因数 " + k + " をくくり出してから a² - b² = (a + b)(a - b) を使う";
+      cands.push({ factors: [X.sub(C(a)), X.sub(C(a))], coef: k });
+      cands.push({ factors: [X.add(C(a * k)), X.sub(C(a))], coef: 1 });
+      cands.push({ factors: [X.add(C(a)), X.sub(C(a))], coef: 1 });
+      cands.push({ factors: [X.add(C(2 * a)), X.sub(C(2 * a))], coef: k });
+    }
+    const product = (fs, k) => fs.reduce((acc, f) => acc.mul(f), Poly.const(k === undefined ? 1 : k));
+    const original = product(factors, coef);
+    const correct = formatFactors(factors, coef);
+    const choiceFactors = {};
+    choiceFactors[correct] = { factors, coef };
+    const wrongStrs = [];
+    for (const c of cands) {
+      const cc = c.coef === undefined ? coef : c.coef;
+      const fs = c.mono ? [X].concat(c.factors) : c.factors;
+      if (product(fs, cc).eq(original)) continue;
+      const s = formatFactors(fs, cc);
+      if (choiceFactors[s]) continue;
+      choiceFactors[s] = { factors: fs, coef: cc };
+      wrongStrs.push(s);
+    }
+    const fallback = () => {
+      const i = randInt(rng, 0, factors.length - 1);
+      const fs = factors.slice();
+      fs[i] = fs[i].add(C(randNonZero(rng, -3, 3)));
+      if (product(fs, coef).eq(original)) throw new Error("同じ");
+      const s = formatFactors(fs, coef);
+      choiceFactors[s] = { factors: fs, coef };
+      return s;
+    };
+    const steps = [hint, formatPoly(original) + " = " + correct];
+    const p = choiceProblem(
+      rng,
+      {
+        unitId: "factorize",
+        level,
+        prompt: "次の式を因数分解しなさい。\n" + formatPoly(original),
+        steps,
+        meta: { factors, coef, original, choiceFactors },
+      },
+      correct,
+      wrongStrs,
+      fallback
+    );
+    // 使わなかった候補は消しておく
+    for (const k of Object.keys(choiceFactors)) if (!p.choices.includes(k)) delete choiceFactors[k];
+    return p;
+  }
+
+  // ---- 平方根 ----
+  // k√n の表示（簡約前）
+  function rootStr(k, n) {
+    return (k === 1 ? "" : k === -1 ? "-" : String(k)) + "√" + n;
+  }
+  function genSqrt(rng, level) {
+    let value, prompt, num, wrongs = [], steps;
+    const sqf = [2, 3, 5, 6, 7];
+    const t = level === 1 ? pick(rng, ["simplify", "addsub", "mul"]) : pick(rng, ["rational", "square", "product", "muldiv"]);
+    if (t === "simplify") {
+      const r = pick(rng, sqf),
+        k = randInt(rng, 2, 7);
+      const n = k * k * r;
+      value = Surd.sqrt(n);
+      num = Math.sqrt(n);
+      prompt = "√" + n + " を a√b の形に変形しなさい。";
+      wrongs = [rootStr(k + 1, r), rootStr(k - 1, r).replace(/^1√/, "√"), rootStr(k * k, r), rootStr(r, k), rootStr(k, r * 2)];
+      steps = [n + " = " + k + "² × " + r, "√" + n + " = " + value.toString()];
+    } else if (t === "addsub") {
+      const r = pick(rng, [2, 3, 5]);
+      const n = randInt(rng, 2, 3);
+      let sum = new Surd(),
+        js = 0,
+        str = "",
+        naive = 0;
+      let shown = "";
+      const used = new Set();
+      for (let i = 0; i < n; i++) {
+        const k = randInt(rng, 1, 5);
+        need(!used.has(k), "同じ根号");
+        used.add(k);
+        const sg = i === 0 ? 1 : pick(rng, [1, -1]);
+        const m = k * k * r;
+        sum = sum.add(Surd.sqrt(m).mul(sg));
+        js += sg * Math.sqrt(m);
+        naive += sg * m;
+        str += (i === 0 ? "" : sg > 0 ? " + " : " - ") + "√" + m;
+        shown += (i === 0 ? "" : sg > 0 ? " + " : " - ") + rootStr(k, r);
+      }
+      need(!sum.isZero(), "0");
+      value = sum;
+      num = js;
+      prompt = "次の計算をしなさい。\n" + str;
+      if (naive > 0) wrongs.push(Surd.sqrt(naive).toString() === value.toString() ? "√" + (naive + 1) : "√" + naive);
+      const coef = value.terms.get(r);
+      if (coef) {
+        wrongs.push(Surd.sqrt(r).mul(coef.add(1)).toString());
+        wrongs.push(Surd.sqrt(r).mul(coef.sub(1)).toString());
+        wrongs.push(Surd.sqrt(r * 2).mul(coef).toString());
+      }
+      steps = ["それぞれ a√b の形にする: " + shown, "√" + r + " の係数をまとめる: " + value.toString()];
+    } else if (t === "mul") {
+      const a = pick(rng, [2, 3, 5, 6, 7, 10]),
+        b = pick(rng, [2, 3, 6, 8, 12, 15, 18]);
+      need(a !== b, "同じ");
+      value = Surd.sqrt(a).mul(Surd.sqrt(b));
+      num = Math.sqrt(a) * Math.sqrt(b);
+      prompt = "次の計算をしなさい。\n√" + a + " × √" + b;
+      wrongs = ["√" + (a + b), (a * b) + "", Surd.sqrt(a * b).mul(2).toString(), "√" + a * b === value.toString() ? "2√" + a * b : "√" + a * b];
+      steps = ["√a × √b = √(ab) より √" + a * b, "簡単にする: " + value.toString()];
+    } else if (t === "rational") {
+      // k/√r + √m など
+      const r = pick(rng, [2, 3, 5, 6]);
+      const k = r * randInt(rng, 1, 4);
+      const m2 = randInt(rng, 1, 4);
+      const sg = pick(rng, [1, -1]);
+      const m = m2 * m2 * r;
+      value = Surd.sqrt(r).mul(new Frac(k, r)).add(Surd.sqrt(m).mul(sg));
+      num = k / Math.sqrt(r) + sg * Math.sqrt(m);
+      need(!value.isZero(), "0");
+      prompt = "次の計算をしなさい。\n" + k + "/√" + r + (sg > 0 ? " + " : " - ") + "√" + m;
+      const co = value.terms.get(r) || new Frac(0);
+      wrongs.push(Surd.sqrt(r).mul(new Frac(k)).add(Surd.sqrt(m).mul(sg)).toString());
+      wrongs.push(Surd.sqrt(r).mul(co.add(1)).toString());
+      wrongs.push(Surd.sqrt(r).mul(co.neg()).toString());
+      wrongs.push(Surd.rat(new Frac(k, r)).add(Surd.sqrt(m).mul(sg)).toString());
+      steps = ["分母を有理化する: " + k + "/√" + r + " = " + k + "√" + r + "/" + r + " = " + Surd.sqrt(r).mul(new Frac(k, r)).toString()];
+      if (m2 > 1) steps.push("√" + m + " = " + Surd.sqrt(m).toString());
+      steps.push("まとめる: " + value.toString());
+    } else if (t === "square") {
+      const a = pick(rng, [2, 3, 5, 6, 7]),
+        b = randNonZero(rng, -4, 4);
+      const base = Surd.sqrt(a).add(b);
+      value = base.mul(base);
+      num = Math.pow(Math.sqrt(a) + b, 2);
+      prompt = "次の計算をしなさい。\n(√" + a + (b > 0 ? " + " : " - ") + Math.abs(b) + ")²";
+      wrongs.push(Surd.rat(a + b * b).toString());
+      wrongs.push(Surd.rat(a + b * b).add(Surd.sqrt(a).mul(b)).toString());
+      wrongs.push(Surd.rat(a + b * b).sub(Surd.sqrt(a).mul(2 * b)).toString());
+      wrongs.push(Surd.rat(a + 2 * b).add(Surd.sqrt(a).mul(2 * b)).toString());
+      steps = [
+        "(a + b)² = a² + 2ab + b² を使う",
+        "(√" + a + ")² + 2 × √" + a + " × " + paren(b) + " + " + paren(b) + "² = " + value.toString(),
+      ];
+    } else if (t === "product") {
+      // (√a + p)(√a + q)
+      const a = pick(rng, [2, 3, 5, 6, 7]),
+        p = randNonZero(rng, -5, 5),
+        q = randNonZero(rng, -5, 5);
+      need(p !== q, "同じ");
+      value = Surd.sqrt(a).add(p).mul(Surd.sqrt(a).add(q));
+      num = (Math.sqrt(a) + p) * (Math.sqrt(a) + q);
+      const term = (v) => (v > 0 ? " + " + v : " - " + -v);
+      prompt = "次の計算をしなさい。\n(√" + a + term(p) + ")(√" + a + term(q) + ")";
+      wrongs.push(Surd.rat(a + p * q).toString());
+      wrongs.push(Surd.rat(a + p * q).sub(Surd.sqrt(a).mul(p + q)).toString());
+      wrongs.push(Surd.rat(a - p * q).add(Surd.sqrt(a).mul(p + q)).toString());
+      wrongs.push(Surd.rat(a + p * q).add(Surd.sqrt(a).mul(p * q)).toString());
+      steps = [
+        "(x + a)(x + b) = x² + (a + b)x + ab を使う",
+        a + (p + q >= 0 ? " + " + (p + q) : " - " + -(p + q)) + "√" + a + (p * q > 0 ? " + " + p * q : " - " + -(p * q)) + " = " + value.toString(),
+      ];
+    } else {
+      // √a × √b ÷ √c
+      const a = pick(rng, [2, 3, 6, 10, 15]),
+        b = pick(rng, [2, 3, 5, 6, 8, 12]),
+        c = pick(rng, [2, 3, 5, 6]);
+      need((a * b) % c === 0, "割り切れる");
+      value = Surd.sqrt((a * b) / c);
+      num = (Math.sqrt(a) * Math.sqrt(b)) / Math.sqrt(c);
+      prompt = "次の計算をしなさい。\n√" + a + " × √" + b + " ÷ √" + c;
+      wrongs.push(Surd.sqrt(a * b * c).toString());
+      wrongs.push(value.mul(2).toString());
+      wrongs.push(Surd.sqrt(a + b - c > 0 ? a + b - c : a + b).toString());
+      wrongs.push("√" + (a * b) / c === value.toString() ? value.add(1).toString() : "√" + (a * b) / c);
+      steps = ["√(" + a + " × " + b + " ÷ " + c + ") = √" + (a * b) / c, "簡単にする: " + value.toString()];
+    }
+    const correct = value.toString();
+    // 値が正解と同じになる誤答（表記違い）は除く
+    const evalStr = (s) => {
+      const js = s.replace(/(\d*)√(\d+)/g, (_, k, r) => "(" + (k || "1") + "*Math.sqrt(" + r + "))");
+      try {
+        return Function('"use strict";return (' + js + ")")();
+      } catch (e) {
+        return NaN;
+      }
+    };
+    // √(平方数) のような表記の誤答は出さない
+    const perfectRoot = (s) => (s.match(/√(\d+)/g) || []).some((t) => M.simplifySqrt(+t.slice(1)).r === 1);
+    const ok = (s) => typeof s === "string" && !perfectRoot(s) && Math.abs(evalStr(s) - num) > 1e-9 && isFinite(evalStr(s));
+    return choiceProblem(
+      rng,
+      { unitId: "sqrt", level, prompt, steps, meta: { value, exprNumber: num } },
+      correct,
+      wrongs.filter(ok),
+      () => {
+        const s = value.add(Surd.sqrt(pick(rng, [2, 3, 5])).mul(randNonZero(rng, -2, 2))).toString();
+        if (!ok(s)) throw new Error("同値");
+        return s;
+      }
+    );
+  }
+
+  // ---- 二次方程式 ----
+  // 解の表示
+  function rootsRational(rs) {
+    const u = [];
+    for (const r of rs) if (!u.some((v) => v.eq(r))) u.push(r);
+    u.sort((a, b) => a.toNumber() - b.toNumber());
+    if (u.length === 2 && u[0].eq(u[1].neg())) return "x = ±" + u[1].toString();
+    return "x = " + u.map((r) => r.toString()).join(", ");
+  }
+  // (p ± q√r)/d  （p, q, d は整数、q>0, d>0, r は平方因数なし >1）
+  function rootsIrrational(p, q, r, d) {
+    const g = M.gcd(M.gcd(Math.abs(p), q), d);
+    p /= g;
+    q /= g;
+    d /= g;
+    const qs = (q === 1 ? "" : String(q)) + "√" + r;
+    if (d === 1) return p === 0 ? "x = ±" + qs : "x = " + p + " ± " + qs;
+    return p === 0 ? "x = ±" + qs + "/" + d : "x = (" + p + " ± " + qs + ")/" + d;
+  }
+  function genQuadeq(rng, level) {
+    const X = Poly.var("x");
+    let poly, prompt, answer, wrongs = [], steps;
+    const t = level === 1 ? pick(rng, ["fact", "fact", "zero", "sq"]) : pick(rng, ["formula", "formula", "shift", "ax2"]);
+    if (t === "fact" || t === "zero" || t === "sq" || t === "ax2") {
+      let p, q, a = 1;
+      if (t === "fact") {
+        p = randInt(rng, -9, 9);
+        q = randInt(rng, -9, 9);
+        need(p !== 0 && q !== 0 && p !== -q, "形");
+      } else if (t === "zero") {
+        p = 0;
+        q = randNonZero(rng, -9, 9);
+      } else if (t === "sq") {
+        p = randInt(rng, 1, 9);
+        q = -p;
+      } else {
+        a = randInt(rng, 2, 3);
+        p = randNonZero(rng, -7, 7);
+        q = randNonZero(rng, -5, 5);
+        need(M.gcd(a, Math.abs(p)) === 1, "既約");
+      }
+      // a(x)... : (a x - p)(x - q) = 0  → 解 p/a, q
+      poly = X.scale(a).sub(Poly.const(p)).mul(X.sub(Poly.const(q)));
+      const r1 = new Frac(p, a),
+        r2 = new Frac(q);
+      answer = rootsRational([r1, r2]);
+      prompt = formatPoly(poly) + " = 0";
+      wrongs.push(rootsRational([r1.neg(), r2.neg()]));
+      wrongs.push(rootsRational([r1, r2.neg()]));
+      wrongs.push(rootsRational([r1.neg(), r2]));
+      if (a !== 1) wrongs.push(rootsRational([new Frac(p), r2]));
+      if (t === "zero") wrongs.push(rootsRational([r2]));
+      if (t === "sq") wrongs.push(rootsRational([new Frac(p)]));
+      steps = ["左辺を因数分解する: " + formatFactors([X.scale(a).sub(Poly.const(p)), X.sub(Poly.const(q))]) + " = 0", answer];
+    } else if (t === "shift") {
+      // (x + a)² = b
+      const a = randNonZero(rng, -6, 6),
+        b = pick(rng, [2, 3, 5, 6, 7, 8, 12, 18, 20]);
+      poly = X.add(Poly.const(a)).pow(2).sub(Poly.const(b));
+      const { k, r } = M.simplifySqrt(b);
+      answer = rootsIrrational(-a, k, r, 1);
+      prompt = "(" + formatPoly(X.add(Poly.const(a))) + ")² = " + b;
+      wrongs.push(rootsIrrational(a, k, r, 1));
+      wrongs.push(rootsIrrational(-a, b, 1, 1) === answer ? rootsIrrational(-a, k + 1, r, 1) : "x = " + -a + " ± " + b);
+      if (b > 1) wrongs.push("x = " + -a + " ± √" + b === answer ? rootsIrrational(-a, k, r, 2) : "x = " + (-a) + " ± √" + b);
+      wrongs.push(rootsIrrational(-a, k, r, 2));
+      steps = ["x " + (a > 0 ? "+ " + a : "- " + -a) + " = ±√" + b, answer];
+    } else {
+      // 解の公式
+      const A = randInt(rng, 1, 3),
+        B = randInt(rng, -7, 7),
+        Cc = randNonZero(rng, -7, 7);
+      const D = B * B - 4 * A * Cc;
+      need(D > 0, "実数解");
+      const { k, r } = M.simplifySqrt(D);
+      need(r !== 1, "無理数解");
+      poly = X.pow(2).scale(A).add(X.scale(B)).add(Poly.const(Cc));
+      answer = rootsIrrational(-B, k, r, 2 * A);
+      prompt = formatPoly(poly) + " = 0";
+      wrongs.push(rootsIrrational(B, k, r, 2 * A));
+      wrongs.push(rootsIrrational(-B, k, r, A));
+      wrongs.push(rootsIrrational(-B, k, r, 1));
+      const D2 = B * B + 4 * A * Cc;
+      if (D2 > 0) {
+        const s2 = M.simplifySqrt(D2);
+        if (s2.r !== 1) wrongs.push(rootsIrrational(-B, s2.k, s2.r, 2 * A));
+      }
+      steps = [
+        "解の公式 x = (-b ± √(b² - 4ac))/2a に a = " + A + "、b = " + B + "、c = " + Cc + " を代入",
+        "x = (" + -B + " ± √" + D + ")/" + 2 * A,
+        "簡単にする: " + answer,
+      ];
+    }
+    // 答えと解の集合が同じ誤答を除く
+    const toNums = (s) => {
+      const out = [];
+      for (const part of s.slice(4).split(", ")) {
+        const ev = (e) => Function('"use strict";return (' + e.replace(/(\d*)√(\d+)/g, (_, kk, rr) => "(" + (kk || "1") + "*Math.sqrt(" + rr + "))") + ")")();
+        if (part.includes("±")) {
+          out.push(ev(part.startsWith("±") ? part.slice(1) : part.replace("±", "+")));
+          out.push(ev(part.startsWith("±") ? "-" + part.slice(1) : part.replace("±", "-")));
+        } else out.push(ev(part));
+      }
+      return out.sort((a, b) => a - b);
+    };
+    const ans = toNums(answer);
+    const differs = (s) => {
+      let w;
+      try {
+        w = toNums(s);
+      } catch (e) {
+        return false;
+      }
+      return w.length !== ans.length || w.some((v, i) => !isFinite(v) || Math.abs(v - ans[i]) > 1e-9);
+    };
+    return choiceProblem(
+      rng,
+      { unitId: "quadeq", level, prompt: "次の方程式を解きなさい。\n" + prompt, steps, meta: { poly } },
+      answer,
+      wrongs.filter(differs),
+      () => {
+        const s = rootsRational([new Frac(randNonZero(rng, -9, 9)), new Frac(randNonZero(rng, -9, 9))]);
+        if (!differs(s)) throw new Error("同じ");
+        return s;
+      }
+    );
+  }
+
+  const GENERATORS = {
+    signed: genSigned,
+    linexpr: genLinexpr,
+    lineq: genLineq,
+    proportion: genProportion,
+    polycalc: genPolycalc,
+    simul: genSimul,
+    linfunc: genLinfunc,
+    expand: genExpand,
+    factorize: genFactorize,
+    sqrt: genSqrt,
+    quadeq: genQuadeq,
+  };
+
+  // ---------- 予備問題（生成に失敗し続けた場合のみ使用） ----------
+  function fb(unitId, level, prompt, answerType, answer, steps, extra) {
+    return Object.assign({ unitId, level, prompt, answerType, answer, steps, meta: {} }, extra || {});
+  }
+  const FALLBACK = {
+    signed: {
+      1: fb("signed", 1, "次の計算をしなさい。\n(-3) + 8 - (-5)", "number", "10", ["-3 + 8 + 5 = 10"]),
+      2: fb("signed", 2, "次の計算をしなさい。\n(-2)³ × 3 - 4²", "number", "-40", [
+        "(-2)³ = -8、4² = 16",
+        "-8 × 3 - 16 = -24 - 16 = -40",
+      ]),
+    },
+    linexpr: {
+      1: fb("linexpr", 1, "次の計算をしなさい。\n(3x + 2) - (x - 5)", "choice", "2x + 7", ["3x + 2 - x + 5 = 2x + 7"], {
+        choices: ["2x + 7", "2x - 3", "4x - 3", "2x - 7"],
+      }),
+      2: fb("linexpr", 2, "次の計算をしなさい。\n2(3x - 1) - 3(x + 2)", "choice", "3x - 8", [
+        "6x - 2 - 3x - 6",
+        "= 3x - 8",
+      ], { choices: ["3x - 8", "3x + 4", "9x - 8", "3x - 4"] }),
+    },
+    lineq: {
+      1: fb("lineq", 1, "次の方程式を解きなさい。\n3x + 1 = x + 7", "number", "3", ["3x - x = 7 - 1", "2x = 6", "x = 3"]),
+      2: fb("lineq", 2, "次の方程式を解きなさい。\n2(x + 3) = 5(x - 3)", "number", "7", [
+        "2x + 6 = 5x - 15",
+        "-3x = -21",
+        "x = 7",
+      ]),
+    },
+    proportion: {
+      1: fb("proportion", 1, "y は x に比例し、x = 2 のとき y = 6 です。\ny を x の式で表しなさい。", "choice", "y = 3x", [
+        "y = ax に代入して 6 = 2a",
+        "a = 3",
+      ], { choices: ["y = 3x", "y = 12/x", "y = 1/3x", "y = -3x"] }),
+      2: fb("proportion", 2, "y は x に反比例し、x = -4 のとき y = 3 です。\ny を x の式で表しなさい。", "choice", "y = -12/x", [
+        "a = xy = (-4) × 3 = -12",
+      ], { choices: ["y = -12/x", "y = 12/x", "y = -12x", "y = -3/4x"] }),
+    },
+    polycalc: {
+      1: fb("polycalc", 1, "次の計算をしなさい。\n6x²y ÷ 2x", "choice", "3xy", ["6 ÷ 2 = 3、x² ÷ x = x", "= 3xy"], {
+        choices: ["3xy", "3x²y", "4xy", "3x³y"],
+      }),
+      2: fb("polycalc", 2, "次の計算をしなさい。\n3(2a - b) - 2(a - 3b)", "choice", "4a + 3b", ["6a - 3b - 2a + 6b", "= 4a + 3b"], {
+        choices: ["4a + 3b", "4a - 9b", "4a - 3b", "8a + 3b"],
+      }),
+    },
+    simul: {
+      1: fb("simul", 1, "次の連立方程式を解きなさい。\nx + y = 5\nx - y = 1", "number", ["3", "2"], [
+        "2式をたすと 2x = 6、x = 3",
+        "x + y = 5 に代入して y = 2",
+      ], { fields: ["x", "y"] }),
+      2: fb("simul", 2, "次の連立方程式を解きなさい。\n2x + 3y = 12\n3x - 2y = 5", "number", ["3", "2"], [
+        "1式を2倍、2式を3倍してたすと 13x = 39、x = 3",
+        "2x + 3y = 12 に代入して y = 2",
+      ], { fields: ["x", "y"] }),
+    },
+    linfunc: {
+      1: fb("linfunc", 1, "傾きが 2 で、点 (1, 5) を通る直線の式を求めなさい。", "choice", "y = 2x + 3", [
+        "y = 2x + b に (1, 5) を代入: 5 = 2 + b",
+        "b = 3",
+      ], { choices: ["y = 2x + 3", "y = 2x - 3", "y = 3x + 2", "y = 2x + 5"] }),
+      2: fb("linfunc", 2, "2点 (1, 3)、(3, 7) を通る直線の式を求めなさい。", "choice", "y = 2x + 1", [
+        "傾き = (7 - 3) ÷ (3 - 1) = 2",
+        "3 = 2 × 1 + b より b = 1",
+      ], { choices: ["y = 2x + 1", "y = 1/2x + 5/2", "y = 2x - 1", "y = -2x + 5"] }),
+    },
+    expand: {
+      1: fb("expand", 1, "次の式を展開しなさい。\n(x + 3)²", "choice", "x² + 6x + 9", ["(a + b)² = a² + 2ab + b²", "= x² + 6x + 9"], {
+        choices: ["x² + 6x + 9", "x² + 9", "x² + 3x + 9", "x² + 6x + 6"],
+      }),
+      2: fb("expand", 2, "次の式を展開しなさい。\n(2x - 3y)²", "choice", "4x² - 12xy + 9y²", [
+        "(2x)² - 2 × 2x × 3y + (3y)²",
+        "= 4x² - 12xy + 9y²",
+      ], { choices: ["4x² - 12xy + 9y²", "4x² + 9y²", "4x² - 6xy + 9y²", "2x² - 12xy + 3y²"] }),
+    },
+    factorize: {
+      1: fb("factorize", 1, "次の式を因数分解しなさい。\nx² + 5x + 6", "choice", "(x + 2)(x + 3)", [
+        "たして 5、かけて 6 になる2数は 2 と 3",
+      ], { choices: ["(x + 2)(x + 3)", "(x - 2)(x - 3)", "(x + 1)(x + 6)", "(x - 1)(x + 6)"] }),
+      2: fb("factorize", 2, "次の式を因数分解しなさい。\n2x² - 8", "choice", "2(x + 2)(x - 2)", [
+        "共通因数 2 をくくる: 2(x² - 4)",
+        "x² - 4 = (x + 2)(x - 2)",
+      ], { choices: ["2(x + 2)(x - 2)", "(2x + 2)(x - 4)", "2(x - 2)²", "2(x + 4)(x - 4)"] }),
+    },
+    sqrt: {
+      1: fb("sqrt", 1, "次の計算をしなさい。\n√12 + √27", "choice", "5√3", ["√12 = 2√3、√27 = 3√3", "2√3 + 3√3 = 5√3"], {
+        choices: ["5√3", "√39", "6√3", "5√6"],
+      }),
+      2: fb("sqrt", 2, "次の計算をしなさい。\n(√3 + 1)²", "choice", "4 + 2√3", ["(√3)² + 2 × √3 × 1 + 1²", "= 3 + 2√3 + 1 = 4 + 2√3"], {
+        choices: ["4 + 2√3", "4", "4 + √3", "3 + 2√3"],
+      }),
+    },
+    quadeq: {
+      1: fb("quadeq", 1, "次の方程式を解きなさい。\nx² - 5x + 6 = 0", "choice", "x = 2, 3", ["(x - 2)(x - 3) = 0", "x = 2, 3"], {
+        choices: ["x = 2, 3", "x = -2, -3", "x = 1, 6", "x = -1, 6"],
+      }),
+      2: fb("quadeq", 2, "次の方程式を解きなさい。\nx² + 2x - 2 = 0", "choice", "x = -1 ± √3", [
+        "解の公式: x = (-2 ± √(4 + 8)) / 2",
+        "= (-2 ± 2√3) / 2 = -1 ± √3",
+      ], { choices: ["x = -1 ± √3", "x = 1 ± √3", "x = -2 ± 2√3", "x = -1 ± √12"] }),
+    },
+  };
+
+  function generate(unitId, level, rng) {
+    for (let i = 0; i < 20; i++) {
+      const fn = api.GENERATORS[unitId];
+      if (!fn) break;
+      try {
+        const p = fn(rng, level);
+        if (validateProblem(p)) return p;
+      } catch (e) {
+        /* 作り直す */
+      }
+    }
+    return FALLBACK[unitId][level];
+  }
+
+  const api = {
+    UNITS,
+    GENERATORS,
+    FALLBACK,
+    makeChoices,
+    formatOverDen,
+    validateProblem,
+    generate,
+    // 単元追加用の内部ヘルパー
+    _h: { choiceProblem, paren, lin, kParen, side, niceFrac, need, plusPoly, monoParen, lcm, formatOverDen },
+  };
+  App.gen = api;
+  if (typeof module !== "undefined") module.exports = api;
+})(typeof globalThis !== "undefined" ? globalThis : this);
+
+// ---- storage.js ----
+(function (root) {
+  "use strict";
+  const App = (root.MathApp = root.MathApp || {});
+  const KEY = "chugaku-math-v1";
+  const MAX_RECENT = 20;
+
+  function emptyData() {
+    return { units: {}, flags: {} };
+  }
+
+  // 読み込んだデータの形を確かめ、使える部分だけ残す
+  function sanitize(raw) {
+    const d = emptyData();
+    if (!raw || typeof raw !== "object") return d;
+    if (raw.units && typeof raw.units === "object") {
+      for (const id of Object.keys(raw.units)) {
+        const u = raw.units[id];
+        if (u && Array.isArray(u.recent)) {
+          const rec = u.recent.filter((v) => v === 0 || v === 1).slice(-MAX_RECENT);
+          d.units[id] = { recent: rec };
+        }
+      }
+    }
+    if (raw.flags && typeof raw.flags === "object") {
+      for (const k of Object.keys(raw.flags)) if (raw.flags[k] === true) d.flags[k] = true;
+    }
+    return d;
+  }
+
+  function defaultBackend() {
+    try {
+      const ls = root.localStorage;
+      if (ls) return ls;
+    } catch (e) {
+      /* アクセス自体が禁止されている */
+    }
+    return null;
+  }
+
+  function createStore(backend) {
+    const be = backend === undefined ? defaultBackend() : backend;
+    let persistent = !!be;
+    let data = emptyData();
+    if (be) {
+      try {
+        const txt = be.getItem(KEY);
+        if (txt) data = sanitize(JSON.parse(txt));
+      } catch (e) {
+        // 壊れている、または読めない
+        data = emptyData();
+        try {
+          be.getItem(KEY);
+        } catch (e2) {
+          persistent = false;
+        }
+      }
+    }
+
+    function save() {
+      if (!be || !persistent) return;
+      try {
+        be.setItem(KEY, JSON.stringify(data));
+      } catch (e) {
+        persistent = false;
+      }
+    }
+
+    const store = {
+      record(unitId, correct) {
+        const u = data.units[unitId] || (data.units[unitId] = { recent: [] });
+        u.recent.push(correct ? 1 : 0);
+        if (u.recent.length > MAX_RECENT) u.recent.splice(0, u.recent.length - MAX_RECENT);
+        save();
+      },
+      stats(unitId) {
+        const u = data.units[unitId];
+        if (!u || u.recent.length === 0) return { count: 0, rate: null };
+        const ok = u.recent.reduce((a, b) => a + b, 0);
+        return { count: u.recent.length, rate: ok / u.recent.length };
+      },
+      weights(unitIds) {
+        return unitIds.map((id) => {
+          const s = store.stats(id);
+          return s.rate === null ? 0.5 : 1 - s.rate + 0.1;
+        });
+      },
+      reset() {
+        data.units = {};
+        save();
+      },
+      getFlag(name) {
+        return data.flags[name] === true;
+      },
+      setFlag(name) {
+        data.flags[name] = true;
+        save();
+      },
+      clearFlag(name) {
+        delete data.flags[name];
+        save();
+      },
+      get persistent() {
+        return persistent;
+      },
+    };
+    // 書き込みできるかを最初に確かめる（Safari のプライベートブラウズ対策）
+    if (be && persistent) save();
+    return store;
+  }
+
+  App.storage = { createStore, KEY };
+  if (typeof module !== "undefined") module.exports = App.storage;
+})(typeof globalThis !== "undefined" ? globalThis : this);
+
+// ---- quiz.js ----
+(function (root) {
+  "use strict";
+  const App = (root.MathApp = root.MathApp || {});
+  const M = App.math;
+  const G = App.gen;
+
+  function pickWeighted(rng, weights) {
+    let total = 0;
+    for (const w of weights) total += Math.max(0, w);
+    if (!(total > 0)) return Math.floor(rng() * weights.length);
+    let t = rng() * total;
+    for (let i = 0; i < weights.length; i++) {
+      const w = Math.max(0, weights[i]);
+      if (t < w) return i;
+      t -= w;
+    }
+    // 浮動小数の誤差対策: 最後の正の重み
+    for (let i = weights.length - 1; i >= 0; i--) if (weights[i] > 0) return i;
+    return weights.length - 1;
+  }
+
+  // 答えの採点。読めない入力は null
+  function grade(problem, input) {
+    if (problem.answerType === "choice") {
+      if (typeof input !== "string" || !problem.choices.includes(input)) return null;
+      return input === problem.answer;
+    }
+    const answers = [].concat(problem.answer);
+    const inputs = [].concat(input);
+    if (inputs.length !== answers.length) return null;
+    const parsed = inputs.map((s) => M.parseAnswer(s));
+    if (parsed.some((v) => v === null)) return null;
+    return parsed.every((v, i) => v.eq(M.parseAnswer(answers[i])));
+  }
+
+  function createSession(opts) {
+    const size = opts.size || 10;
+    const { rng, store, level, mode } = opts;
+    const unitIds = G.UNITS.map((u) => u.id);
+    const seen = new Set();
+    const results = [];
+    let index = 0;
+    let current = null;
+    let graded = null;
+
+    function makeProblem() {
+      let p = null;
+      for (let i = 0; i < 6; i++) {
+        const unitId = mode === "mix" ? unitIds[pickWeighted(rng, store.weights(unitIds))] : opts.unitId;
+        p = G.generate(unitId, level, rng);
+        if (!seen.has(p.prompt)) break;
+      }
+      seen.add(p.prompt);
+      return p;
+    }
+
+    current = makeProblem();
+
+    const session = {
+      get index() {
+        return index;
+      },
+      size,
+      current() {
+        return current;
+      },
+      answer(input) {
+        if (!current) return { status: "invalid" };
+        if (graded) return graded;
+        const ok = grade(current, input);
+        if (ok === null) return { status: "invalid" };
+        try {
+          store.record(current.unitId, ok);
+        } catch (e) {
+          /* 記録できなくても採点は続ける */
+        }
+        results.push({ problem: current, given: input, correct: ok });
+        graded = { status: "graded", correct: ok, problem: current };
+        return graded;
+      },
+      // 次の問題へ。答えていなければ進まない。最後の問題の後は false
+      next() {
+        if (!current || !graded) return false;
+        graded = null;
+        index++;
+        if (index >= size) {
+          current = null;
+          return false;
+        }
+        current = makeProblem();
+        return true;
+      },
+      isAnswered() {
+        return !!graded;
+      },
+      results() {
+        return results.slice();
+      },
+      score() {
+        return results.filter((r) => r.correct).length;
+      },
+    };
+    return session;
+  }
+
+  App.quiz = { createSession, pickWeighted, grade };
+  if (typeof module !== "undefined") module.exports = App.quiz;
+})(typeof globalThis !== "undefined" ? globalThis : this);
+
+// ---- ui.js ----
+(function (root) {
+  "use strict";
+  const App = (root.MathApp = root.MathApp || {});
+
+  // ---------- 数式の表示 ----------
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function frac(n, d) {
+    return '<span class="frac"><span class="num">' + n + '</span><span class="den">' + d + "</span></span>";
+  }
+  // a/b を縦の分数にする（テキストは先にエスケープ）
+  function renderMath(text) {
+    let s = escapeHtml(text);
+    s = s.replace(/\(([^()]+)\)\/(\d+|√\d+)/g, (_, n, d) => frac(n, d));
+    s = s.replace(/(\d*√\d+|\d+|[a-z])\/(√\d+|\d+|[a-z])/g, (_, n, d) => frac(n, d));
+    return s.replace(/\n/g, "<br>");
+  }
+
+  // ---------- 画面 ----------
+  const LEVEL_NAMES = { 1: "基本", 2: "受験レベル" };
+
+  function start(doc) {
+    const { createStore } = App.storage;
+    const { createSession } = App.quiz;
+    const { UNITS } = App.gen;
+    const store = createStore();
+    const appEl = doc.getElementById("app");
+    const state = {
+      level: store.getFlag("level2") ? 2 : 1,
+      session: null,
+      title: "",
+    };
+    const rng = Math.random;
+
+    function h(tag, attrs, children) {
+      const el = doc.createElement(tag);
+      if (attrs) {
+        for (const k of Object.keys(attrs)) {
+          const v = attrs[k];
+          if (v === undefined || v === null || v === false) continue;
+          if (k === "class") el.className = v;
+          else if (k === "html") el.innerHTML = v;
+          else if (k === "text") el.textContent = v;
+          else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+          else el.setAttribute(k, v === true ? "" : v);
+        }
+      }
+      for (const c of [].concat(children || [])) {
+        if (c === null || c === undefined || c === false) continue;
+        el.appendChild(typeof c === "string" ? doc.createTextNode(c) : c);
+      }
+      return el;
+    }
+    function show(el) {
+      appEl.innerHTML = "";
+      appEl.appendChild(el);
+      root.scrollTo && root.scrollTo(0, 0);
+    }
+    function unitName(id) {
+      const u = UNITS.find((x) => x.id === id);
+      return u ? u.name : id;
+    }
+    function rateText(st) {
+      return st.rate === null ? "未挑戦" : Math.round(st.rate * 100) + "%";
+    }
+    function rateClass(st) {
+      if (st.rate === null) return "rate-none";
+      if (st.rate >= 0.8) return "rate-good";
+      if (st.rate >= 0.5) return "rate-mid";
+      return "rate-low";
+    }
+
+    function isIOS() {
+      const ua = root.navigator ? root.navigator.userAgent : "";
+      const touchMac = /Macintosh/.test(ua) && root.navigator.maxTouchPoints > 1;
+      return /iPad|iPhone|iPod/.test(ua) || touchMac;
+    }
+
+    // ----- ホーム -----
+    function renderHome() {
+      const notices = [];
+      if (!store.persistent) {
+        notices.push(h("p", { class: "notice warn", "data-testid": "no-storage" }, "この環境では記録が保存されません"));
+      }
+      if (isIOS() && !(root.navigator && root.navigator.standalone) && !store.getFlag("a2hsClosed")) {
+        notices.push(
+          h("div", { class: "notice a2hs", "data-testid": "a2hs" }, [
+            h("p", null, "共有ボタン →『ホーム画面に追加』で、記録が消えにくくなります"),
+            h(
+              "button",
+              {
+                class: "link",
+                "data-testid": "a2hs-close",
+                onclick: () => {
+                  store.setFlag("a2hsClosed");
+                  renderHome();
+                },
+              },
+              "閉じる"
+            ),
+          ])
+        );
+      }
+      const levelSeg = h("div", { class: "seg", role: "group", "aria-label": "難易度" }, [1, 2].map((lv) =>
+        h(
+          "button",
+          {
+            class: state.level === lv ? "on" : "",
+            "aria-pressed": state.level === lv ? "true" : "false",
+            "data-testid": "level-" + lv,
+            onclick: () => {
+              state.level = lv;
+              if (lv === 2) store.setFlag("level2");
+              else store.clearFlag("level2");
+              renderHome();
+            },
+          },
+          LEVEL_NAMES[lv]
+        )
+      ));
+      const grades = [1, 2, 3].map((g) =>
+        h("section", { class: "grade" }, [
+          h("h2", null, "中" + g),
+          h(
+            "div",
+            { class: "units" },
+            UNITS.filter((u) => u.grade === g).map((u) => {
+              const st = store.stats(u.id);
+              return h(
+                "button",
+                {
+                  class: "unit",
+                  "data-testid": "unit-" + u.id,
+                  onclick: () => startSession({ mode: "unit", unitId: u.id }),
+                },
+                [
+                  h("span", { class: "unit-name" }, u.name),
+                  h("span", { class: "unit-rate " + rateClass(st) }, rateText(st)),
+                ]
+              );
+            })
+          ),
+        ])
+      );
+      show(
+        h("main", { class: "screen home" }, [
+          h("header", { class: "top" }, [
+            h("h1", null, ["中学数学", h("br"), h("span", { class: "sub" }, "計算トレーニング")]),
+            h("button", { class: "link", "data-testid": "nav-stats", onclick: renderStats }, "記録"),
+          ]),
+          ...notices,
+          levelSeg,
+          h(
+            "button",
+            { class: "primary mix", "data-testid": "mix", onclick: () => startSession({ mode: "mix" }) },
+            [h("span", null, "苦手ミックス"), h("small", null, "正答率の低い単元から多めに10問")]
+          ),
+          ...grades,
+        ])
+      );
+    }
+
+    // ----- 出題 -----
+    function startSession(opts) {
+      state.session = createSession({ mode: opts.mode, unitId: opts.unitId, level: state.level, rng, store, size: 10 });
+      state.title = (opts.mode === "mix" ? "苦手ミックス" : unitName(opts.unitId)) + "・" + LEVEL_NAMES[state.level];
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const s = state.session;
+      const p = s.current();
+      if (!p) return renderResult();
+      const lines = p.prompt.split("\n");
+      const feedback = h("div", { class: "feedback", "data-testid": "feedback", hidden: true, "aria-live": "polite" });
+      const msg = h("p", { class: "msg", "aria-live": "polite" });
+      const nextBtn = h(
+        "button",
+        { class: "primary", "data-testid": "next", hidden: true, onclick: goNext },
+        s.index + 1 >= s.size ? "結果を見る" : "次へ"
+      );
+      let answerArea;
+      let inputs = [];
+      let choiceBtns = [];
+      let submitBtn = null;
+
+      function finish(res, givenChoice) {
+        if (res.status !== "graded") return;
+        inputs.forEach((i) => (i.disabled = true));
+        choiceBtns.forEach((b) => {
+          b.disabled = true;
+          if (b.dataset.value === p.answer) b.classList.add("correct");
+          else if (b.dataset.value === givenChoice) b.classList.add("wrong");
+        });
+        if (submitBtn) submitBtn.hidden = true;
+        msg.textContent = "";
+        feedback.hidden = false;
+        feedback.className = "feedback " + (res.correct ? "ok" : "ng");
+        const ans = Array.isArray(p.answer) ? p.answer.map((a, i) => p.fields[i] + " = " + a).join("、") : p.answer;
+        feedback.innerHTML = "";
+        feedback.appendChild(h("p", { class: "verdict" }, res.correct ? "正解！" : "不正解…"));
+        if (!res.correct) {
+          feedback.appendChild(h("p", { class: "answer" }, [h("span", { class: "label" }, "正解 "), h("span", { html: renderMath(ans) })]));
+        }
+        feedback.appendChild(
+          h("details", { open: !res.correct }, [
+            h("summary", null, "解き方"),
+            h("ol", { class: "steps" }, p.steps.map((st) => h("li", { html: renderMath(st) }))),
+          ])
+        );
+        nextBtn.hidden = false;
+        nextBtn.focus();
+      }
+
+      if (p.answerType === "choice") {
+        choiceBtns = p.choices.map((c, i) =>
+          h(
+            "button",
+            {
+              class: "choice",
+              "data-testid": "choice-" + i,
+              "data-value": c,
+              html: renderMath(c),
+              onclick: () => {
+                if (s.isAnswered()) return;
+                finish(s.answer(c), c);
+              },
+            }
+          )
+        );
+        answerArea = h("div", { class: "choices" }, choiceBtns);
+      } else {
+        const fields = p.fields || ["答え"];
+        const submit = () => {
+          if (s.isAnswered()) return;
+          const vals = inputs.map((i) => i.value);
+          const res = s.answer(p.fields ? vals : vals[0]);
+          if (res.status === "invalid") {
+            msg.textContent = "数字で入力してね";
+            const empty = inputs.find((i) => i.value.trim() === "") || inputs[0];
+            empty.focus();
+            return;
+          }
+          finish(res);
+        };
+        inputs = fields.map((f, i) =>
+          h("input", {
+            type: "text",
+            inputmode: "text",
+            autocomplete: "off",
+            autocapitalize: "off",
+            autocorrect: "off",
+            spellcheck: "false",
+            enterkeyhint: "done",
+            "aria-label": f,
+            "data-testid": "input-" + i,
+            onkeydown: (e) => {
+              if (e.key === "Enter" && !e.isComposing) {
+                e.preventDefault();
+                if (i < fields.length - 1 && inputs[i + 1].value.trim() === "") inputs[i + 1].focus();
+                else submit();
+              }
+            },
+          })
+        );
+        submitBtn = h("button", { class: "primary", "data-testid": "submit", onclick: submit }, "答え合わせ");
+        answerArea = h("div", { class: "num-answer" }, [
+          ...fields.map((f, i) => h("label", { class: "field" }, [h("span", { class: "fname" }, p.fields ? f + " =" : f), inputs[i]])),
+          h("p", { class: "hint" }, "分数は 3/4 のように入力"),
+          submitBtn,
+        ]);
+      }
+
+      function goNext() {
+        if (!s.isAnswered()) return;
+        if (s.next()) renderQuestion();
+        else renderResult();
+      }
+
+      show(
+        h("main", { class: "screen quiz" }, [
+          h("header", { class: "top" }, [
+            h("button", { class: "link", "data-testid": "quit", onclick: renderHome }, "← やめる"),
+            h("span", { class: "title" }, state.title),
+            h("span", { class: "progress", "data-testid": "progress" }, s.index + 1 + " / " + s.size),
+          ]),
+          h("div", { class: "bar" }, h("div", { class: "bar-in", style: "width:" + (s.index / s.size) * 100 + "%" })),
+          h("section", { class: "card question" }, [
+            h("p", { class: "instr" }, lines[0]),
+            h("div", { class: "prompt", "data-testid": "prompt", html: renderMath(lines.slice(1).join("\n")) }),
+          ]),
+          answerArea,
+          msg,
+          feedback,
+          nextBtn,
+        ])
+      );
+      if (inputs[0] && !isIOS()) inputs[0].focus();
+    }
+
+    // ----- 結果 -----
+    function renderResult() {
+      const s = state.session;
+      const res = s.results();
+      const wrong = res.filter((r) => !r.correct);
+      const fmtGiven = (r) =>
+        Array.isArray(r.given) ? r.given.map((g, i) => r.problem.fields[i] + " = " + g).join("、") : String(r.given);
+      const fmtAns = (p) => (Array.isArray(p.answer) ? p.answer.map((a, i) => p.fields[i] + " = " + a).join("、") : p.answer);
+      show(
+        h("main", { class: "screen result" }, [
+          h("header", { class: "top" }, [h("span", { class: "title" }, state.title)]),
+          h("section", { class: "card score-card" }, [
+            h("p", { class: "score", "data-testid": "score" }, [
+              s.size + "問中 ",
+              h("strong", null, String(s.score())),
+              "問正解",
+            ]),
+            h("p", { class: "comment" }, s.score() === s.size ? "全問正解！すばらしい！" : s.score() >= 7 ? "いい調子！" : "間違えた問題を見直そう"),
+          ]),
+          wrong.length
+            ? h("section", { class: "review" }, [
+                h("h2", null, "間違えた問題"),
+                ...wrong.map((r) =>
+                  h("div", { class: "card review-item" }, [
+                    h("div", { class: "prompt small", html: renderMath(r.problem.prompt.split("\n").slice(1).join("\n")) }),
+                    h("p", null, [h("span", { class: "label" }, "あなたの答え "), h("span", { class: "given", html: renderMath(fmtGiven(r)) })]),
+                    h("p", null, [h("span", { class: "label" }, "正解 "), h("span", { html: renderMath(fmtAns(r.problem)) })]),
+                    h("ol", { class: "steps" }, r.problem.steps.map((st) => h("li", { html: renderMath(st) }))),
+                  ])
+                ),
+              ])
+            : null,
+          h("div", { class: "actions" }, [
+            h(
+              "button",
+              {
+                class: "primary",
+                "data-testid": "retry",
+                onclick: () => {
+                  const first = res[0] && res[0].problem;
+                  const mix = state.title.startsWith("苦手ミックス");
+                  startSession(mix || !first ? { mode: "mix" } : { mode: "unit", unitId: first.unitId });
+                },
+              },
+              "もう一度"
+            ),
+            h("button", { class: "secondary", "data-testid": "home", onclick: renderHome }, "ホームへ"),
+          ]),
+        ])
+      );
+    }
+
+    // ----- 記録 -----
+    function renderStats() {
+      const rows = UNITS.map((u) => {
+        const st = store.stats(u.id);
+        return h("tr", { "data-testid": "stat-" + u.id }, [
+          h("td", null, "中" + u.grade),
+          h("td", null, u.name),
+          h("td", { class: "num" }, [
+            h("span", { class: "unit-rate " + rateClass(st) }, rateText(st)),
+          ]),
+          h("td", { class: "num", "data-testid": "count-" + u.id }, String(st.count)),
+        ]);
+      });
+      show(
+        h("main", { class: "screen stats" }, [
+          h("header", { class: "top" }, [
+            h("button", { class: "link", "data-testid": "back", onclick: renderHome }, "← もどる"),
+            h("span", { class: "title" }, "記録"),
+          ]),
+          h("p", { class: "hint" }, "正答率は各単元の直近20問から計算しています。"),
+          h("div", { class: "card table-wrap" }, h("table", null, [
+            h("thead", null, h("tr", null, [h("th", null, "学年"), h("th", null, "単元"), h("th", { class: "num" }, "正答率"), h("th", { class: "num" }, "解答数")])),
+            h("tbody", null, rows),
+          ])),
+          h(
+            "button",
+            {
+              class: "danger",
+              "data-testid": "reset",
+              onclick: () => {
+                if (root.confirm("すべての記録を消しますか？（元に戻せません）")) {
+                  store.reset();
+                  renderStats();
+                }
+              },
+            },
+            "記録をリセット"
+          ),
+        ])
+      );
+    }
+
+    renderHome();
+  }
+
+  App.ui = { renderMath, escapeHtml, start };
+  if (typeof module !== "undefined") module.exports = App.ui;
+  if (typeof document !== "undefined" && typeof module === "undefined") {
+    const boot = () => start(document);
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+    else boot();
+  }
+})(typeof globalThis !== "undefined" ? globalThis : this);
+
+</script>
+</body>
+</html>
