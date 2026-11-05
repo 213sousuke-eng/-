@@ -1,0 +1,9 @@
+{
+  "name": "chugaku-math",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "build": "node build.js",
+    "e2e": "node tests/e2e/run.js"
+  }
+}
