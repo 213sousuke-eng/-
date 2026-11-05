@@ -1,0 +1,9 @@
+{
+  "name": "smart-router",
+  "version": "1.0.0",
+  "description": "指示を受けるたびに難易度を判定し、最適なモデル (Haiku/Sonnet/Opus) とエフォート (low〜max) のサブエージェントへ自動で振り分けるプラグイン",
+  "author": { "name": "213sousuke-eng" },
+  "repository": "https://github.com/213sousuke-eng/-",
+  "license": "MIT",
+  "keywords": ["model", "effort", "router", "routing", "subagent"]
+}

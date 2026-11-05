@@ -1,0 +1,14 @@
+{
+  "name": "smart-router-marketplace",
+  "owner": { "name": "213sousuke-eng" },
+  "description": "smart-router プラグインの配布用マーケットプレイス",
+  "plugins": [
+    {
+      "name": "smart-router",
+      "source": "./plugins/smart-router",
+      "description": "指示ごとに最適なモデルとエフォートへ自動で切り替える",
+      "version": "1.0.0",
+      "category": "productivity"
+    }
+  ]
+}
